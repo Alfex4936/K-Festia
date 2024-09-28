@@ -1,0 +1,39 @@
+type Festival {
+    name: String
+    nameEn: String
+    summary: String
+    summaryEn: String
+    startDate: String
+    endDate: String
+    address: String
+    usageFeeInfo: String
+    areaName: String
+    naverUrl: String
+    categories: [FestivalCategory!]! # List of categories
+
+    latitude: Float
+    longitude: Float
+    distance: Float
+}
+
+type FestivalPage {
+    content: [Festival]
+    pageNumber: Int
+    pageSize: Int
+    totalElements: Int
+    totalPages: Int
+}
+
+enum FestivalCategory {
+    MUSIC_PERFORMING_ARTS
+    VISUAL_ARTS_EXHIBITIONS
+    CULTURAL_HERITAGE
+    FOOD_CULINARY
+    FAMILY_CHILDREN
+    SPORTS_RECREATION
+    TECHNOLOGY_INNOVATION
+    LITERATURE_EDUCATION
+    SEASONAL_HOLIDAY
+    COMMUNITY_SOCIAL
+    OTHER
+}

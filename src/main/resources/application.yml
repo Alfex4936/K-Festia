@@ -1,0 +1,5 @@
+# application.yml
+
+spring:
+  config:
+    import: application-secret.yml

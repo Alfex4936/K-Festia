@@ -1,0 +1,9 @@
+type Query {
+    festivals(
+        month: String,
+        latitude: Float,
+        longitude: Float,
+        page: Int,
+        size: Int
+    ): FestivalPage
+}
