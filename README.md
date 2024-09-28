@@ -1,6 +1,6 @@
 # K-Festia
 
-![example_graphql](https://github.com/user-attachments/assets/85bb9177-e5d0-40a6-9680-a238cf8a32f5)
+![example_graphql](https://github.com/user-attachments/assets/c48f0087-74fb-443e-82c6-d2d4edf144b0)
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen)](https://spring.io/projects/spring-boot)
 [![GraphQL](https://img.shields.io/badge/GraphQL-22.x-ff69b4)](https://graphql.org/)

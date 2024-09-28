@@ -15,8 +15,12 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.StructuredTaskScope;
 import java.util.regex.Pattern;
 
 @Slf4j
@@ -76,21 +80,41 @@ public class FestivalService {
 
         List<Festival> festivals = fetchFestivalsInKorean(month, latitude, longitude);
 
-        // Filter out expired festivals (endDate < today)
-        // Sort festivals by distance in ascending order
+        // Filter out expired festivals
         LocalDate today = LocalDate.now();
         List<Festival> activeFestivals = festivals.stream()
                 .filter(festival -> {
                     LocalDate festivalEndDate = festival.getParsedEndDate();
-                    // Ensure that festivalEndDate is not null
                     return festivalEndDate != null && !festivalEndDate.isBefore(today);
-                }).sorted(Comparator.comparing(Festival::getDistance)).toList();
-
-        // Translate festival names and summaries
-        List<Festival> translatedFestivals = activeFestivals.stream()
-                .map(this::translateAndCategorizeFestival)
-                .sorted(Comparator.comparing(Festival::getDistance))
+                })
+//                .sorted(Comparator.comparing(Festival::getDistance))
                 .toList();
+
+        // Translate and categorize festivals concurrently using virtual threads
+        // Java 21+ Virtual Threads (Project Loom)
+        List<Festival> translatedFestivals = new ArrayList<>();
+
+        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
+            List<StructuredTaskScope.Subtask<Festival>> futures = new ArrayList<>();
+            for (Festival festival : activeFestivals) {
+                StructuredTaskScope.Subtask<Festival> future = scope.fork(() -> translateAndCategorizeFestival(festival));
+                futures.add(future);
+            }
+
+            scope.join();           // Wait for all tasks to complete
+            scope.throwIfFailed();  // Propagate exceptions
+
+            // Collect results
+            for (StructuredTaskScope.Subtask<Festival> future : futures) {
+                translatedFestivals.add(future.get());
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error during festival processing", e);
+        }
+
+        // Sort the translated festivals by distance
+        translatedFestivals.sort(Comparator.comparing(Festival::getDistance));
 
         // Pagination logic
         int totalElements = translatedFestivals.size();
@@ -123,9 +147,7 @@ public class FestivalService {
      */
     private List<Festival> fetchFestivalsInKorean(String month, float latitude, float longitude) {
         // Construct the payload with month, latitude, and longitude
-        String payload = "startIdx=0&searchType=A&searchDate=" + month +
-                "&searchArea=&searchCate=&locationx=" + latitude +
-                "&locationy=" + longitude;
+        String payload = STR."startIdx=0&searchType=A&searchDate=\{month}&searchArea=&searchCate=&locationx=\{latitude}&locationy=\{longitude}";
 
         String primaryUri = "https://korean.visitkorea.or.kr/kfes/list/selectWntyFstvlList.do";
         String secondaryUri = "https://kfes.ktovisitkorea.com/list/selectWntyFstvlList.do";
@@ -137,7 +159,7 @@ public class FestivalService {
                 .retrieve()
                 .bodyToMono(FestivalResponse.class)
                 // Fallback to secondary URI upon error
-                .onErrorResume(e -> webClient.post()
+                .onErrorResume(_ -> webClient.post()
                         .uri(secondaryUri)
                         .header("Content-Type", "application/x-www-form-urlencoded")
                         .bodyValue(payload)
