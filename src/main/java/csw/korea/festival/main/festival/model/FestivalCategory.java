@@ -1,5 +1,8 @@
 package csw.korea.festival.main.festival.model;
 
+import lombok.Getter;
+
+@Getter
 public enum FestivalCategory {
     MUSIC_PERFORMING_ARTS("Music & Performing Arts"),
     VISUAL_ARTS_EXHIBITIONS("Visual Arts & Exhibitions"),
@@ -13,19 +16,16 @@ public enum FestivalCategory {
     COMMUNITY_SOCIAL("Community & Social"),
     OTHER("Other"); // Optional: For uncategorized festivals
 
+    /**
+     * -- GETTER --
+     *  Retrieves the display name of the category.
+     *
+     * @return The display name.
+     */
     private final String displayName;
 
     FestivalCategory(String displayName) {
         this.displayName = displayName;
-    }
-
-    /**
-     * Retrieves the display name of the category.
-     *
-     * @return The display name.
-     */
-    public String getDisplayName() {
-        return displayName;
     }
 
     /**

@@ -1,5 +1,6 @@
 package csw.korea.festival.main.festival.resolver;
 
+
 import csw.korea.festival.main.festival.model.FestivalPage;
 import csw.korea.festival.main.festival.service.FestivalService;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class FestivalResolver {
             @Argument Integer page,
             @Argument Integer size
     ) {
+
         return festivalService.getFestivals(month, latitude, longitude, page, size);
     }
 }

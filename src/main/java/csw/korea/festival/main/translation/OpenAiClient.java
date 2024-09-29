@@ -44,7 +44,7 @@ public class OpenAiClient {
             String requestBody = objectMapper.writeValueAsString(requestBodyMap);
 
             String response = Request.post(OPENAI_API_URL)
-                    .addHeader("Authorization", "Bearer " + apiKey)
+                    .addHeader("Authorization", STR."Bearer \{apiKey}")
                     .addHeader("Content-Type", "application/json")
                     .bodyString(requestBody, org.apache.hc.core5.http.ContentType.APPLICATION_JSON)
                     .execute()
@@ -125,7 +125,7 @@ public class OpenAiClient {
             ));
 
             String response = Request.post(OPENAI_API_URL)
-                    .addHeader("Authorization", "Bearer " + apiKey)
+                    .addHeader("Authorization", STR."Bearer \{apiKey}")
                     .addHeader("Content-Type", "application/json")
                     .bodyString(requestBody, org.apache.hc.core5.http.ContentType.APPLICATION_JSON)
                     .execute()

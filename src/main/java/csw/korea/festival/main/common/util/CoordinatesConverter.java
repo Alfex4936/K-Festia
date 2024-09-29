@@ -1,4 +1,4 @@
-package csw.korea.festival.main.util;
+package csw.korea.festival.main.common.util;
 
 import csw.korea.festival.main.config.converter.TimezoneMapper;
 

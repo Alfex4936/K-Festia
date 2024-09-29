@@ -1,7 +1,7 @@
 package csw.korea.festival.main.common.service;
 
 
-import csw.korea.festival.main.util.DAT;
+import csw.korea.festival.main.common.util.DAT;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

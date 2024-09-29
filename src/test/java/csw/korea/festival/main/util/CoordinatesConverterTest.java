@@ -1,5 +1,6 @@
 package csw.korea.festival.main.util;
 
+import csw.korea.festival.main.common.util.CoordinatesConverter;
 import csw.korea.festival.main.config.converter.TimezoneMapper;
 import org.junit.jupiter.api.Test;
 
