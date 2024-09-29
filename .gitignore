@@ -5,6 +5,7 @@ target/
 !**/src/test/**/target/
 application-secret.yml
 application-secret.properties
+badwords.txt
 
 ### STS ###
 .apt_generated
