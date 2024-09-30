@@ -18,7 +18,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.StructuredTaskScope;
 import java.util.regex.Pattern;
@@ -33,6 +32,8 @@ public class FestivalService {
     private static final float DEFAULT_LONGITUDE = 126.98068787026715f;
     // Precompile the regex pattern for performance
     private static final Pattern HTML_TAG_PATTERN = Pattern.compile("<[^>]+>");
+    private static final Pattern VALID_MONTH_PATTERN = Pattern.compile("^(0[1-9]|1[0-2])$");
+
     private final WebClient webClient;
 
     private final TranslationService translationService;
@@ -54,7 +55,7 @@ public class FestivalService {
             month = LocalDate.now().format(DateTimeFormatter.ofPattern("MM"));
         } else {
             // Validate month format
-            if (!month.matches("^(0[1-9]|1[0-2])$")) {
+            if (!VALID_MONTH_PATTERN.matcher(month).matches()) {
                 throw new IllegalArgumentException("Invalid month format. Use MM format (e.g., '01' for January).");
             }
         }
@@ -64,8 +65,9 @@ public class FestivalService {
             latitude = DEFAULT_LATITUDE;
         } else {
             // Validate latitude range
-            if (latitude < -90.0f || latitude > 90.0f) {
-                throw new IllegalArgumentException("Invalid latitude. Must be between -90 and 90.");
+//            if (latitude < -90.0f || latitude > 90.0f) {
+            if (latitude < 32.0f || latitude > 39.0f) {
+                throw new IllegalArgumentException("Invalid latitude. Must be between 33 and 38.");
             }
         }
 
@@ -73,8 +75,8 @@ public class FestivalService {
             longitude = DEFAULT_LONGITUDE;
         } else {
             // Validate longitude range
-            if (longitude < -180.0f || longitude > 180.0f) {
-                throw new IllegalArgumentException("Invalid longitude. Must be between -180 and 180.");
+            if (longitude < 123.0f || longitude > 133.0f) {
+                throw new IllegalArgumentException("Invalid longitude. Must be between 124 and 132.");
             }
         }
 
@@ -87,9 +89,10 @@ public class FestivalService {
                     LocalDate festivalEndDate = festival.getParsedEndDate();
                     return festivalEndDate != null && !festivalEndDate.isBefore(today);
                 })
-//                .sorted(Comparator.comparing(Festival::getDistance))
+//                .sorted(Comparator.comparing(Festival::getDistance)) // sort later
                 .toList();
 
+        // TODO: Unstable API
         // Translate and categorize festivals concurrently using virtual threads
         // Java 21+ Virtual Threads (Project Loom)
         List<Festival> translatedFestivals = new ArrayList<>();
@@ -112,6 +115,7 @@ public class FestivalService {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Error during festival processing", e);
         }
+        // TODO: Unstable API end
 
         // Sort the translated festivals by distance
         translatedFestivals.sort(Comparator.comparing(Festival::getDistance));
@@ -197,7 +201,7 @@ public class FestivalService {
 
         // Set Naver URL with proper encoding
         String encodedAddress = URLEncoder.encode(festival.getAddress(), StandardCharsets.UTF_8);
-        String naverUrl = "https://map.naver.com/?query=" + encodedAddress + "&type=SITE_1&queryRank=0";
+        String naverUrl = STR."https://map.naver.com/?query=\{encodedAddress}&type=SITE_1&queryRank=0";
         festival.setNaverUrl(naverUrl);
 
         return festival;

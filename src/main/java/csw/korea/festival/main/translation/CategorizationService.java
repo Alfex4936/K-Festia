@@ -1,12 +1,11 @@
 package csw.korea.festival.main.translation;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import csw.korea.festival.main.festival.model.FestivalCategory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;

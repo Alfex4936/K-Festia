@@ -55,7 +55,7 @@ public class Festival {
 
     /**
      * Parses the endDate string to LocalDate.
-     * Assumes the endDate is in "yyyy-MM-dd" format.
+     * the endDate must be "yyyy.MM.dd" format.
      */
     public LocalDate getParsedEndDate() {
         if (parsedEndDate == null && endDate != null && !endDate.isEmpty()) {
