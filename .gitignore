@@ -6,6 +6,8 @@ target/
 application-secret.yml
 application-secret.properties
 badwords.txt
+*.db
+*.sql
 
 ### STS ###
 .apt_generated

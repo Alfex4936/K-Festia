@@ -9,6 +9,6 @@ public class FestivalPage {
     private List<Festival> content;
     private int pageNumber;
     private int pageSize;
-    private int totalElements;
+    private long totalElements;
     private int totalPages;
 }

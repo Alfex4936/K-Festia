@@ -7,5 +7,5 @@ import java.util.List;
 @Data
 public class FestivalResponse {
     private int totalCnt;
-    private List<Festival> resultList;
+    private List<FestivalDTO> resultList;
 }

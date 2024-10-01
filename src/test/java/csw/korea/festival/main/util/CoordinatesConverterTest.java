@@ -17,7 +17,7 @@ public class CoordinatesConverterTest {
         double long2 = 126.9780;
 
         // When
-        double result = CoordinatesConverter.calculateDistanceApproximately(lat1, long1, lat2, long2);
+        double result = CoordinatesConverter.calculateDistance(lat1, long1, lat2, long2);
 
         // Then
         assertEquals(0, result);
@@ -32,7 +32,7 @@ public class CoordinatesConverterTest {
         double long2 = 127.061476;
 
         // When
-        double result = CoordinatesConverter.calculateDistanceApproximately(lat1, long1, lat2, long2); // 7.427212904540012
+        double result = CoordinatesConverter.calculateDistance(lat1, long1, lat2, long2); // 7.427212904540012
 
         // Then
         assertEquals(7, result, 1.0);
@@ -48,8 +48,8 @@ public class CoordinatesConverterTest {
         var result = CoordinatesConverter.convertWGS84ToWCONGNAMUL(lat, lon);
 
         // Then
-        assertEquals(498040.0, result.x);
-        assertEquals(1041367.0, result.y);
+        assertEquals(498040.0, result.latitude());
+        assertEquals(1041367.0, result.longitude());
     }
 
     @Test
@@ -62,8 +62,8 @@ public class CoordinatesConverterTest {
         var result = CoordinatesConverter.convertWCONGNAMULToWGS84(lat, lon);
 
         // Then
-        assertEquals(37.5478543870196, result.x, 0.001);
-        assertEquals(129.105530908533, result.y, 0.001);
+        assertEquals(37.5478543870196, result.latitude(), 0.001);
+        assertEquals(129.105530908533, result.longitude(), 0.001);
     }
 
     // TimezoneMapperTest

@@ -19,6 +19,21 @@ public class TomcatVirtualThreadConfig {
 
             if (protocolHandler instanceof Http11NioProtocol httpProtocol) {
                 httpProtocol.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
+
+                httpProtocol.setConnectionTimeout(20000); // 20 seconds
+                httpProtocol.setKeepAliveTimeout(15000); // 15 seconds
+                httpProtocol.setMaxConnections(10000);     // Max concurrent connections
+                httpProtocol.setMaxThreads(0);             // Unlimited threads (handled by virtual threads)
+                httpProtocol.setMinSpareThreads(0);        // Let virtual threads handle spares
+
+                httpProtocol.setMaxHeaderCount(200);
+                httpProtocol.setMaxHttpHeaderSize(32768);
+
+                // Enable GZIP Compression
+//                connector.setProperty("compression", "on");
+//                connector.setProperty("compressableMimeType",
+//                        "text/html,text/xml,text/plain,application/json,application/xml");
+//                connector.setProperty("compressionMinSize", "2048"); // Compress responses larger than 2KB
             }
         });
     }

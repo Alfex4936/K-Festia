@@ -1,26 +1,32 @@
 package csw.korea.festival.main.festival.service;
 
-import csw.korea.festival.main.festival.model.Festival;
-import csw.korea.festival.main.festival.model.FestivalCategory;
-import csw.korea.festival.main.festival.model.FestivalPage;
-import csw.korea.festival.main.festival.model.FestivalResponse;
+import csw.korea.festival.main.config.LimitedThreadFactory;
+import csw.korea.festival.main.festival.model.*;
+import csw.korea.festival.main.festival.repository.FestivalRepository;
 import csw.korea.festival.main.translation.CategorizationService;
 import csw.korea.festival.main.translation.TranslationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAdjusters;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.StructuredTaskScope;
+import java.util.concurrent.ThreadFactory;
+import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static csw.korea.festival.main.common.util.CoordinatesConverter.calculateDistance;
 
 @Slf4j
 @Service
@@ -35,6 +41,7 @@ public class FestivalService {
     private static final Pattern VALID_MONTH_PATTERN = Pattern.compile("^(0[1-9]|1[0-2])$");
 
     private final WebClient webClient;
+    private final FestivalRepository festivalRepository;
 
     private final TranslationService translationService;
     private final CategorizationService categorizationService;
@@ -60,83 +67,82 @@ public class FestivalService {
             }
         }
 
-        // Default to predefined latitude and longitude if not provided
-        if (latitude == null) {
-            latitude = DEFAULT_LATITUDE;
-        } else {
-            // Validate latitude range
-//            if (latitude < -90.0f || latitude > 90.0f) {
-            if (latitude < 32.0f || latitude > 39.0f) {
-                throw new IllegalArgumentException("Invalid latitude. Must be between 33 and 38.");
-            }
+        // Validate and set default values for latitude and longitude
+        latitude = (latitude != null) ? latitude : DEFAULT_LATITUDE;
+        if (latitude < 32.0f || latitude > 39.0f) {
+            throw new IllegalArgumentException("Invalid latitude. Must be between 33 and 38.");
         }
 
-        if (longitude == null) {
-            longitude = DEFAULT_LONGITUDE;
-        } else {
-            // Validate longitude range
-            if (longitude < 123.0f || longitude > 133.0f) {
-                throw new IllegalArgumentException("Invalid longitude. Must be between 124 and 132.");
-            }
+        longitude = (longitude != null) ? longitude : DEFAULT_LONGITUDE;
+        if (longitude < 123.0f || longitude > 133.0f) {
+            throw new IllegalArgumentException("Invalid longitude. Must be between 124 and 132.");
         }
 
-        List<Festival> festivals = fetchFestivalsInKorean(month, latitude, longitude);
+        // Define the freshness threshold (e.g., data updated within the last 7 days)
+        LocalDateTime freshnessThreshold = LocalDateTime.now().minusDays(7);
 
-        // Filter out expired festivals
+        // Compute start and end dates of the month
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
         LocalDate today = LocalDate.now();
-        List<Festival> activeFestivals = festivals.stream()
-                .filter(festival -> {
-                    LocalDate festivalEndDate = festival.getParsedEndDate();
-                    return festivalEndDate != null && !festivalEndDate.isBefore(today);
-                })
-//                .sorted(Comparator.comparing(Festival::getDistance)) // sort later
-                .toList();
+        int currentYear = today.getYear();
+        int monthInt = Integer.parseInt(month);
+        LocalDate startOfMonthDate = LocalDate.of(currentYear, monthInt, 1);
+        LocalDate endOfMonthDate = startOfMonthDate.with(TemporalAdjusters.lastDayOfMonth());
+        String startOfMonth = startOfMonthDate.format(dateFormatter);
+        String endOfMonth = endOfMonthDate.format(dateFormatter);
 
-        // TODO: Unstable API
-        // Translate and categorize festivals concurrently using virtual threads
-        // Java 21+ Virtual Threads (Project Loom)
-        List<Festival> translatedFestivals = new ArrayList<>();
+        // Fetch festivals overlapping the month
+        List<Festival> festivals = festivalRepository.findFestivalsOverlappingMonth(startOfMonth, endOfMonth, freshnessThreshold);
 
-        try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
-            List<StructuredTaskScope.Subtask<Festival>> futures = new ArrayList<>();
-            for (Festival festival : activeFestivals) {
-                StructuredTaskScope.Subtask<Festival> future = scope.fork(() -> translateAndCategorizeFestival(festival));
-                futures.add(future);
+        if (festivals.isEmpty()) {
+            // Fetch from external API
+            // Filter out expired festivals
+            List<FestivalDTO> festivalDTOs = filterExpiredFestivals(fetchFestivalsInKorean()); // FETCH ALL FESTIVALS
+
+            // Process festivals (translation and categorization)
+            List<Festival> processedFestivals = processFestivals(festivalDTOs, freshnessThreshold);
+
+            if (!processedFestivals.isEmpty()) {
+                // Update the lastUpdated timestamp
+                processedFestivals.forEach(festival -> festival.setLastUpdated(LocalDateTime.now()));
+
+                // Save processed festivals to the database
+                festivalRepository.saveAll(processedFestivals);
+                log.info("Saved {} new festivals to the database.", processedFestivals.size());
             }
 
-            scope.join();           // Wait for all tasks to complete
-            scope.throwIfFailed();  // Propagate exceptions
-
-            // Collect results
-            for (StructuredTaskScope.Subtask<Festival> future : futures) {
-                translatedFestivals.add(future.get());
-            }
-        } catch (InterruptedException | ExecutionException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Error during festival processing", e);
+            // Fetch all festivals again after inserting new ones
+            festivals = festivalRepository.findFestivalsOverlappingMonth(startOfMonth, endOfMonth, freshnessThreshold);
         }
-        // TODO: Unstable API end
 
-        // Sort the translated festivals by distance
-        translatedFestivals.sort(Comparator.comparing(Festival::getDistance));
+        // Filter out expired festivals from the entity list
+        festivals = festivals.stream()
+                .filter(festival -> festival.getEndDate() != null && !festival.getEndDate().isBefore(today))
+                .collect(Collectors.toList());
 
-        // Pagination logic
-        int totalElements = translatedFestivals.size();
-        int pageNumber = (page != null && page >= 0) ? page : 0;
-        int pageSize = (size != null && size > 0) ? size : 10;
-        int totalPages = (int) Math.ceil((double) totalElements / pageSize);
+        // Calculate distances and sort
+        Float finalLatitude = latitude;
+        Float finalLongitude = longitude;
+        festivals.forEach(festival -> {
+            double calculatedDistance = calculateDistance(finalLatitude, finalLongitude, festival.getLatitude(), festival.getLongitude());
+            festival.setDistance(calculatedDistance);
+        });
 
-        int fromIndex = pageNumber * pageSize;
-        int toIndex = Math.min(fromIndex + pageSize, totalElements);
+        festivals.sort(Comparator.comparing(Festival::getDistance));
 
-        List<Festival> pagedFestivals = (fromIndex < toIndex) ? translatedFestivals.subList(fromIndex, toIndex) : List.of();
+        // Apply pagination
+        int start = Math.min(page * size, festivals.size());
+        int end = Math.min(start + size, festivals.size());
+        List<Festival> paginatedFestivals = festivals.subList(start, end);
 
+        // Create and return FestivalPage
         FestivalPage festivalPage = new FestivalPage();
-        festivalPage.setContent(pagedFestivals);
-        festivalPage.setPageNumber(pageNumber);
-        festivalPage.setPageSize(pageSize);
-        festivalPage.setTotalElements(totalElements);
-        festivalPage.setTotalPages(totalPages);
+        festivalPage.setContent(paginatedFestivals);
+        festivalPage.setPageNumber(page);
+        festivalPage.setPageSize(size);
+        festivalPage.setTotalElements(festivals.size());
+        festivalPage.setTotalPages((int) Math.ceil((double) festivals.size() / size));
 
         return festivalPage;
     }
@@ -144,36 +150,54 @@ public class FestivalService {
     /**
      * Fetches festival data in Korean from the external API based on month and location.
      *
-     * @param month     Month in "MM" format.
-     * @param latitude  Latitude for location-based filtering.
-     * @param longitude Longitude for location-based filtering.
      * @return List of festivals.
      */
-    private List<Festival> fetchFestivalsInKorean(String month, float latitude, float longitude) {
-        // Construct the payload with month, latitude, and longitude
-        String payload = STR."startIdx=0&searchType=A&searchDate=\{month}&searchArea=&searchCate=&locationx=\{latitude}&locationy=\{longitude}";
+    private List<FestivalDTO> fetchFestivalsInKorean() {
+        List<FestivalDTO> allFestivals = new ArrayList<>();
+        int startIdx = 0;
+        int pageSize = 12;
+        int totalCnt = Integer.MAX_VALUE; // Initialize to a large number
 
         String primaryUri = "https://korean.visitkorea.or.kr/kfes/list/selectWntyFstvlList.do";
         String secondaryUri = "https://kfes.ktovisitkorea.com/list/selectWntyFstvlList.do";
 
-        return webClient.post()
-                .uri(primaryUri)
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .bodyValue(payload)
-                .retrieve()
-                .bodyToMono(FestivalResponse.class)
-                // Fallback to secondary URI upon error
-                .onErrorResume(_ -> webClient.post()
-                        .uri(secondaryUri)
-                        .header("Content-Type", "application/x-www-form-urlencoded")
-                        .bodyValue(payload)
-                        .retrieve()
-                        .bodyToMono(FestivalResponse.class))
-                // both URIs fail
-//                .doOnError(e -> logger.error("Both URIs failed: {}", e.toString()))
-                .blockOptional()
-                .map(FestivalResponse::getResultList)
-                .orElse(List.of()); // Return empty list if both fail
+        while (startIdx < totalCnt) {
+            // &searchDate=\{month}&locationx=\{latitude}&locationy=\{longitude}
+            String payload = STR."startIdx=\{startIdx}&searchType=A&searchArea=&searchCate=";
+
+            FestivalResponse response = webClient.post()
+                    .uri(primaryUri)
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .bodyValue(payload)
+                    .retrieve()
+                    .bodyToMono(FestivalResponse.class)
+                    // Fallback to secondary URI upon error
+                    .onErrorResume(ex -> {
+                        log.error("Primary URI failed: {}, attempting secondary URI.", ex.getMessage());
+                        return webClient.post()
+                                .uri(secondaryUri)
+                                .header("Content-Type", "application/x-www-form-urlencoded")
+                                .bodyValue(payload)
+                                .retrieve()
+                                .bodyToMono(FestivalResponse.class);
+                    })
+                    .block();
+
+            if (response == null || response.getResultList() == null || response.getResultList().isEmpty()) {
+                log.warn("No festivals fetched for startIdx: {}", startIdx);
+                break; // Exit the loop if no data is returned
+            }
+
+            if (totalCnt == Integer.MAX_VALUE) {
+                totalCnt = response.getTotalCnt(); // Set the total count from the first response
+                pageSize = response.getResultList().size(); // Determine the page size
+            }
+
+            allFestivals.addAll(response.getResultList());
+            startIdx += pageSize; // Increment startIdx by the page size
+        }
+
+        return allFestivals;
     }
 
     /**
@@ -183,6 +207,11 @@ public class FestivalService {
      * @return The processed festival with translated fields and assigned categories.
      */
     private Festival translateAndCategorizeFestival(Festival festival) {
+        if (Thread.currentThread().isInterrupted()) {
+            // Handle interruption, e.g., return early
+            return null; // or throw an exception
+        }
+
         // Clean the summary by removing HTML tags and unwanted characters
         String cleanSummary = HTML_TAG_PATTERN.matcher(festival.getSummary()).replaceAll("").trim()
                 .replace("\r", "").replace("\n", "");
@@ -196,7 +225,7 @@ public class FestivalService {
         festival.setSummaryEn(translatedSummary);
 
         // Assign categories using OpenAI
-        List<FestivalCategory> categories = categorizationService.categorize(translatedSummary);
+        Set<FestivalCategory> categories = new HashSet<>(categorizationService.categorize(translatedSummary));
         festival.setCategories(categories);
 
         // Set Naver URL with proper encoding
@@ -204,6 +233,159 @@ public class FestivalService {
         String naverUrl = STR."https://map.naver.com/?query=\{encodedAddress}&type=SITE_1&queryRank=0";
         festival.setNaverUrl(naverUrl);
 
+        if (festival.getUsageFeeInfo() != null) {
+            festival.setUsageFeeInfo(festival.getUsageFeeInfo().trim());
+        }
+
+        if (Thread.currentThread().isInterrupted()) {
+            return null;
+        }
+
         return festival;
     }
+
+    @SuppressWarnings(value = "UnstableApiUsage")
+    private List<Festival> processFestivals(List<FestivalDTO> festivalDTOs, LocalDateTime freshnessThreshold) {
+        if (festivalDTOs.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Map DTOs to entities
+        Map<String, Festival> festivalMap = festivalDTOs.stream()
+                .map(this::mapDtoToEntity)
+                .collect(Collectors.toMap(Festival::getFestivalId, Function.identity()));
+
+        // Extract unique identifiers
+        Set<String> festivalIds = festivalMap.keySet();
+
+        // Fetch existing festivals from the database
+        List<Festival> existingFestivals = festivalRepository.findByFestivalIdIn(festivalIds);
+
+        // Create a map for easy lookup
+        Map<String, Festival> existingFestivalMap = existingFestivals.stream()
+                .collect(Collectors.toMap(Festival::getFestivalId, Function.identity()));
+
+        // Lists to hold festivals to process
+        List<Festival> festivalsToProcess = new ArrayList<>();
+
+        for (Map.Entry<String, Festival> entry : festivalMap.entrySet()) {
+            String festivalId = entry.getKey();
+            Festival festival = entry.getValue();
+
+            if (!existingFestivalMap.containsKey(festivalId)) {
+                // New festival
+                festivalsToProcess.add(festival);
+            } else {
+                // Festival exists in database
+                Festival existingFestival = existingFestivalMap.get(festivalId);
+                if (existingFestival.getLastUpdated().isBefore(freshnessThreshold)) {
+                    // Existing festival is outdated
+                    festival.setId(existingFestival.getId()); // Ensure we're updating the same entity
+                    festivalsToProcess.add(festival);
+                }
+                // Else, up-to-date festival, do not process
+            }
+        }
+
+        log.info("Identified {} festivals to process (new or outdated).", festivalsToProcess.size());
+
+        if (festivalsToProcess.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Proceed to translate and categorize festivals
+        int maxConcurrency = 10;
+        ThreadFactory baseFactory = Thread.ofVirtual().factory();
+        ThreadFactory limitedFactory = new LimitedThreadFactory(baseFactory, maxConcurrency);
+
+        List<Festival> processedFestivals = new ArrayList<>();
+        try (var scope = new StructuredTaskScope.ShutdownOnFailure(null, limitedFactory)) {
+            List<StructuredTaskScope.Subtask<Festival>> futures = new ArrayList<>();
+            for (Festival festival : festivalsToProcess) {
+                StructuredTaskScope.Subtask<Festival> future = scope.fork(() -> translateAndCategorizeFestival(festival));
+                futures.add(future);
+            }
+
+            scope.join();
+            scope.throwIfFailed();
+
+            for (StructuredTaskScope.Subtask<Festival> future : futures) {
+                Festival result = future.get();
+                if (result != null) {
+                    processedFestivals.add(result);
+                }
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error during festival processing", e);
+        }
+
+        return processedFestivals;
+    }
+
+
+    private FestivalPage convertToFestivalPage(Page<Festival> festivalPage) {
+        FestivalPage page = new FestivalPage();
+        page.setContent(festivalPage.getContent());
+        page.setPageNumber(festivalPage.getNumber());
+        page.setPageSize(festivalPage.getSize());
+        page.setTotalElements(festivalPage.getTotalElements());
+        page.setTotalPages(festivalPage.getTotalPages());
+        return page;
+    }
+
+    private Festival mapDtoToEntity(FestivalDTO dto) {
+        Festival festival = new Festival();
+        festival.setFestivalId(dto.getFestivalId().strip());
+        festival.setName(dto.getName().strip());
+        festival.setSummary(dto.getSummary());
+        festival.setAddress(dto.getAddress());
+        festival.setUsageFeeInfo(dto.getUsageFeeInfo());
+        festival.setAreaName(dto.getAreaName());
+        festival.setLatitude(dto.getLatitude());
+        festival.setLongitude(dto.getLongitude());
+        festival.setLastUpdated(LocalDateTime.now());
+
+        // Parse and set startDate and endDate
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+        if (dto.getStartDate() != null && !dto.getStartDate().isEmpty()) {
+            festival.setStartDate(LocalDate.parse(dto.getStartDate(), formatter));
+        }
+        if (dto.getEndDate() != null && !dto.getEndDate().isEmpty()) {
+            festival.setEndDate(LocalDate.parse(dto.getEndDate(), formatter));
+        }
+
+        festival.setUsageFeeCategory(CategorizationService.categorizeUsageFee(dto.getUsageFeeInfo()));
+
+        return festival;
+    }
+
+    /**
+     * Filters out expired FestivalDTOs based on their endDate.
+     *
+     * @param festivalDTOs The list of FestivalDTOs to filter.
+     * @return A list of FestivalDTOs that are not expired.
+     */
+    private List<FestivalDTO> filterExpiredFestivals(List<FestivalDTO> festivalDTOs) {
+        LocalDate today = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+
+        return festivalDTOs.stream()
+                .filter(dto -> {
+                    String endDateStr = dto.getEndDate();
+                    if (endDateStr == null || endDateStr.isEmpty()) {
+                        // If endDate is missing, consider it as not expired
+                        return true;
+                    }
+                    try {
+                        LocalDate endDate = LocalDate.parse(endDateStr, formatter);
+                        return !endDate.isBefore(today);
+                    } catch (DateTimeParseException e) {
+                        log.warn("Invalid endDate format for festival '{}': {}", dto.getName(), endDateStr);
+                        return false;
+                    }
+                })
+                .collect(Collectors.toList());
+    }
+
 }

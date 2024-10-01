@@ -16,14 +16,38 @@ public class CoordinatesConverter {
     private static final double RADIANS_PER_DEGREE = Math.PI / 180;
     private static final double SCALE_FACTOR = 2.5;
 
-    public static double calculateDistanceApproximately(double lat1, double long1, double lat2, double long2) {
-        double lat1Rad = lat1 * RADIANS_PER_DEGREE;
-        double lat2Rad = lat2 * RADIANS_PER_DEGREE;
-        double deltaLat = (lat2 - lat1) * RADIANS_PER_DEGREE;
-        double deltaLong = (long2 - long1) * RADIANS_PER_DEGREE;
-        double x = deltaLong * Math.cos((lat1Rad + lat2Rad) / 2);
-        return Math.sqrt(x * x + deltaLat * deltaLat) * A_WGS84;
+    public static double calculateDistance(double userLat, double userLon, double festLat, double festLon) {
+        // Haversine formula to calculate distance between two points in kilometers
+        final int EARTH_RADIUS_KM = 6371;
+
+        double latDistance = Math.toRadians(festLat - userLat);
+        double lonDistance = Math.toRadians(festLon - userLon);
+
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(userLat)) * Math.cos(Math.toRadians(festLat))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return EARTH_RADIUS_KM * c;
     }
+
+    public static double[] calculateBoundingBox(double lat, double lon, double radiusKm) {
+        final int EARTH_RADIUS_KM = 6371;
+
+        // Latitude bounds
+        double deltaLat = Math.toDegrees(radiusKm / EARTH_RADIUS_KM);
+        double minLat = lat - deltaLat;
+        double maxLat = lat + deltaLat;
+
+        // Longitude bounds (adjusted by latitude)
+        double deltaLon = Math.toDegrees(radiusKm / (EARTH_RADIUS_KM * Math.cos(Math.toRadians(lat))));
+        double minLon = lon - deltaLon;
+        double maxLon = lon + deltaLon;
+
+        return new double[]{minLat, maxLat, minLon, maxLon};
+    }
+
 
     public static XYCoordinate convertWGS84ToWCONGNAMUL(double lat, double lon) {
         double[] tmCoords = transformWGS84ToKoreaTM(lat, lon);
