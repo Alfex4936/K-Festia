@@ -14,6 +14,16 @@ type Festival {
     latitude: Float
     longitude: Float
     distance: Float
+    weather: Weather
+}
+
+type Weather {
+    temperature: String
+    desc: String
+    iconImage: String
+    humidity: String
+    rainfall: String
+    snowfall: String
 }
 
 type FestivalPage {

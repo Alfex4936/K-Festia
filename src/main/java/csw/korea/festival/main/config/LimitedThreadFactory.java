@@ -1,5 +1,7 @@
 package csw.korea.festival.main.config;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
 
@@ -13,7 +15,7 @@ public class LimitedThreadFactory implements ThreadFactory {
     }
 
     @Override
-    public Thread newThread(Runnable r) {
+    public Thread newThread(@NotNull Runnable r) {
         Runnable wrappedRunnable = () -> {
             boolean permitAcquired = false;
             try {

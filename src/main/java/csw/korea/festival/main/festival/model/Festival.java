@@ -1,5 +1,6 @@
 package csw.korea.festival.main.festival.model;
 
+import csw.korea.festival.main.common.dto.KWeather;
 import csw.korea.festival.main.config.converter.LocalDateStringConverter;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -58,9 +59,12 @@ public class Festival {
     @Column(name = "last_updated")
     private LocalDateTime lastUpdated;
 
+    @Enumerated(EnumType.STRING)
+    private FestivalUsageFeeCategory usageFeeCategory;
+
     @Transient
     private Double distance;   // Calculated dynamically
 
-    @Enumerated(EnumType.STRING)
-    private FestivalUsageFeeCategory usageFeeCategory;
+    @Transient
+    private KWeather.WeatherRequest weather;    // current weather information
 }

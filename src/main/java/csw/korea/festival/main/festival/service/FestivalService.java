@@ -1,5 +1,7 @@
 package csw.korea.festival.main.festival.service;
 
+import csw.korea.festival.main.common.dto.KWeather;
+import csw.korea.festival.main.common.service.ExternalAPIService;
 import csw.korea.festival.main.config.LimitedThreadFactory;
 import csw.korea.festival.main.festival.model.*;
 import csw.korea.festival.main.festival.repository.FestivalRepository;
@@ -45,6 +47,7 @@ public class FestivalService {
 
     private final TranslationService translationService;
     private final CategorizationService categorizationService;
+    private final ExternalAPIService externalAPIService;
 
     /**
      * Fetches and translates festival data based on the provided month and location with pagination.
@@ -129,6 +132,8 @@ public class FestivalService {
             festival.setDistance(calculatedDistance);
         });
 
+        festivals = processFestivalsWeather(festivals);
+
         festivals.sort(Comparator.comparing(Festival::getDistance));
 
         // Apply pagination
@@ -206,7 +211,7 @@ public class FestivalService {
      * @param festival The festival to process.
      * @return The processed festival with translated fields and assigned categories.
      */
-    private Festival translateAndCategorizeFestival(Festival festival) {
+    private Festival translateAndCategorizeFestival(Festival festival) throws Exception {
         if (Thread.currentThread().isInterrupted()) {
             // Handle interruption, e.g., return early
             return null; // or throw an exception
@@ -237,11 +242,68 @@ public class FestivalService {
             festival.setUsageFeeInfo(festival.getUsageFeeInfo().trim());
         }
 
+        // Current weather per location
+//        try {
+//            var weatherRequest = externalAPIService.getWeatherFromCoordinates(festival.getLatitude(), festival.getLongitude());
+//            festival.setWeather(weatherRequest);
+//        } catch (Exception e) {
+//            festival.setWeather(null); // Set weather to null for now
+//        }
+
         if (Thread.currentThread().isInterrupted()) {
             return null;
         }
 
         return festival;
+    }
+
+    /**
+     * Fetch weather data.
+     *
+     * @param festivalsToProcess The Festivals to process.
+     * @return The processed Festival.
+     */
+    private List<Festival> processFestivalsWeather(List<Festival> festivalsToProcess) {
+        int maxConcurrency = 10;
+        ThreadFactory baseFactory = Thread.ofVirtual().factory();
+        ThreadFactory limitedFactory = new LimitedThreadFactory(baseFactory, maxConcurrency);
+
+        List<Festival> processedFestivals = new ArrayList<>();
+        try (var scope = new StructuredTaskScope.ShutdownOnFailure(null, limitedFactory)) {
+            List<StructuredTaskScope.Subtask<Festival>> futures = new ArrayList<>();
+            for (Festival festival : festivalsToProcess) {
+                StructuredTaskScope.Subtask<Festival> future = scope.fork(() ->
+                        {
+                            // Fetch Weather Data Concurrently
+                            try {
+                                KWeather.WeatherRequest weather = externalAPIService.getWeatherFromCoordinates(
+                                        festival.getLatitude(), festival.getLongitude());
+                                festival.setWeather(weather);
+                                log.info("Fetched weather for festival '{}' ({})", festival.getName(), weather);
+                            } catch (Exception e) {
+                                log.error("Error fetching weather for festival '{}': {}", festival.getName(), e.getMessage());
+                                festival.setWeather(null);
+                            }
+                            return festival;
+                        }
+                );
+                futures.add(future);
+            }
+
+            scope.join();
+            scope.throwIfFailed();
+
+            for (StructuredTaskScope.Subtask<Festival> future : futures) {
+                Festival result = future.get();
+                if (result != null) {
+                    processedFestivals.add(result);
+                }
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Error fetching festival weather", e);
+        }
+        return processedFestivals;
     }
 
     @SuppressWarnings(value = "UnstableApiUsage")
@@ -347,6 +409,7 @@ public class FestivalService {
         festival.setLastUpdated(LocalDateTime.now());
 
         // Parse and set startDate and endDate
+        // koreafestival.com returns date as "yyyy.MM.dd" but I will save as "yyyy-MM-dd"
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
         if (dto.getStartDate() != null && !dto.getStartDate().isEmpty()) {
             festival.setStartDate(LocalDate.parse(dto.getStartDate(), formatter));
