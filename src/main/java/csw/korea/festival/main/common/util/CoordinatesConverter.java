@@ -165,8 +165,7 @@ public class CoordinatesConverter {
         // Return x (Easting) and y (Northing)
         return new double[]{x, y};
     }
-
-
+    
     public static XYCoordinate convertWCONGNAMULToWGS84(double lat, double lon) {
         double[] tmCoords = transformKoreaTMToWGS84(lat / 2.5, lon / 2.5);
         return new XYCoordinate(tmCoords[0], tmCoords[1]);

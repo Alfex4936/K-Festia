@@ -8,6 +8,7 @@ application-secret.properties
 badwords.txt
 *.db
 *.sql
+lucene/
 
 ### STS ###
 .apt_generated

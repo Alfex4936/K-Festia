@@ -7,11 +7,19 @@ import csw.korea.festival.main.festival.model.*;
 import csw.korea.festival.main.festival.repository.FestivalRepository;
 import csw.korea.festival.main.translation.CategorizationService;
 import csw.korea.festival.main.translation.TranslationService;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.search.engine.search.query.SearchResult;
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.safety.Safelist;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -39,7 +47,6 @@ public class FestivalService {
     private static final float DEFAULT_LATITUDE = 37.53000974602071f;
     private static final float DEFAULT_LONGITUDE = 126.98068787026715f;
     // Precompile the regex pattern for performance
-    private static final Pattern HTML_TAG_PATTERN = Pattern.compile("<[^>]+>");
     private static final Pattern VALID_MONTH_PATTERN = Pattern.compile("^(0[1-9]|1[0-2])$");
 
     private final WebClient webClient;
@@ -48,6 +55,7 @@ public class FestivalService {
     private final TranslationService translationService;
     private final CategorizationService categorizationService;
     private final ExternalAPIService externalAPIService;
+    private final EntityManager entityManager;
 
     /**
      * Fetches and translates festival data based on the provided month and location with pagination.
@@ -152,6 +160,30 @@ public class FestivalService {
         return festivalPage;
     }
 
+    public FestivalPage searchFestivals(String query, int page, int size) {
+        SearchSession searchSession = Search.session(entityManager);
+
+        SearchResult<Festival> result = searchSession.search(Festival.class)
+                .where(f -> f.match()
+                        .fields("name", "nameEn", "summary", "summaryEn", "address")
+                        .matching(query)
+                )
+                .fetch(page * size, size);
+
+        List<Festival> festivals = result.hits();
+        long totalHits = result.total().hitCount();
+        int totalPages = (int) ((totalHits + size - 1) / size); // Ceiling division
+
+        FestivalPage festivalPage = new FestivalPage();
+        festivalPage.setContent(festivals);
+        festivalPage.setPageNumber(page);
+        festivalPage.setPageSize(size);
+        festivalPage.setTotalElements((int) totalHits);
+        festivalPage.setTotalPages(totalPages);
+
+        return festivalPage;
+    }
+
     /**
      * Fetches festival data in Korean from the external API based on month and location.
      *
@@ -214,12 +246,14 @@ public class FestivalService {
     private Festival translateAndCategorizeFestival(Festival festival) throws Exception {
         if (Thread.currentThread().isInterrupted()) {
             // Handle interruption, e.g., return early
-            return null; // or throw an exception
+            return null; // FIXME: or throw an exception
         }
 
         // Clean the summary by removing HTML tags and unwanted characters
-        String cleanSummary = HTML_TAG_PATTERN.matcher(festival.getSummary()).replaceAll("").trim()
-                .replace("\r", "").replace("\n", "");
+        String cleanSummary = Jsoup.clean(festival.getSummary(), Safelist.none()); // preserves text within angle brackets if they are not valid HTML tags.
+
+        // Remove unwanted whitespace characters
+        cleanSummary = cleanSummary.replace("\r", "").replace("\n", "").trim();
 
         // Translate name and summary from Korean to English
         String translatedName = translationService.translateText(festival.getName());

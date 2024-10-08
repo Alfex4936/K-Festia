@@ -14,14 +14,8 @@ public enum FestivalCategory {
     LITERATURE_EDUCATION("Literature & Education"),
     SEASONAL_HOLIDAY("Seasonal & Holiday"),
     COMMUNITY_SOCIAL("Community & Social"),
-    OTHER("Other"); // Optional: For uncategorized festivals
+    OTHER("Other"); // For uncategorized festivals
 
-    /**
-     * -- GETTER --
-     *  Retrieves the display name of the category.
-     *
-     * @return The display name.
-     */
     private final String displayName;
 
     FestivalCategory(String displayName) {

@@ -6,4 +6,10 @@ type Query {
         page: Int,
         size: Int
     ): FestivalPage
+
+    searchFestivals(
+        query: String!,
+        page: Int,
+        size: Int
+    ): FestivalPage
 }

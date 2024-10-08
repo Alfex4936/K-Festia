@@ -1,6 +1,7 @@
 # K-Festia
 
 ![example_graphql](https://github.com/user-attachments/assets/c48f0087-74fb-443e-82c6-d2d4edf144b0)
+![search](https://github.com/user-attachments/assets/f2554a6c-841b-4a0e-be02-12229e02f665)
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen)](https://spring.io/projects/spring-boot)
 [![GraphQL](https://img.shields.io/badge/GraphQL-22.x-ff69b4)](https://graphql.org/)
@@ -26,6 +27,7 @@ users can effortlessly discover and explore festivals tailored to their interest
 - **Intelligent Categorization**: Classify festivals into 10 predefined categories leveraging OpenAI's powerful language models.
 - **Pagination & Filtering**: Easily navigate through festival listings with advanced pagination and filtering options.
 - **Robust Error Handling**: Gracefully handle external API failures and data inconsistencies.
+- **Search**: Powered by Apache Lucene to search Korean/English texts among festivals. (name, summary, categories, address)
 
 ---
 

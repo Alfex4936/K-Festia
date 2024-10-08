@@ -35,4 +35,15 @@ public class FestivalResolver {
 
         return festivalService.getFestivals(month, latitude, longitude, page, size);
     }
+
+    @QueryMapping
+    public FestivalPage searchFestivals(
+            @Argument String query,
+            @Argument Integer page,
+            @Argument Integer size
+    ) {
+        int pageNumber = page != null ? page : 0;
+        int pageSize = size != null ? size : 10;
+        return festivalService.searchFestivals(query, pageNumber, pageSize);
+    }
 }
