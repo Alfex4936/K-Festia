@@ -1,6 +1,8 @@
 package csw.korea.festival.main.translation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import csw.korea.festival.main.festival.model.FestivalCategory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -63,23 +65,37 @@ public class OpenAiClient {
         }
 
         try {
-            // Construct the request body using String Templates
-            String requestBody = STR."""
-                    {
-                        "model": "gpt-4o-mini",
-                        "messages": [
-                            {"role": "system", "content": "\{TRANSLATE_SYSTEM_PROMPT}"},
-                            {"role": "user", "content": "\{TRANSLATE_EXAMPLE_USER}"},
-                            {"role": "assistant", "content": "\{TRANSLATE_EXAMPLE_ASSISTANT}"},
-                            {"role": "user", "content": "\{text.strip()}"}
-                        ]
-                    }
-                    """;
+            // Construct the request body using Jackson
+            ObjectNode requestBody = objectMapper.createObjectNode();
+            requestBody.put("model", "gpt-4o-mini");
 
+            ArrayNode messages = objectMapper.createArrayNode();
+
+            messages.add(objectMapper.createObjectNode()
+                    .put("role", "system")
+                    .put("content", TRANSLATE_SYSTEM_PROMPT));
+
+            messages.add(objectMapper.createObjectNode()
+                    .put("role", "user")
+                    .put("content", TRANSLATE_EXAMPLE_USER));
+
+            messages.add(objectMapper.createObjectNode()
+                    .put("role", "assistant")
+                    .put("content", TRANSLATE_EXAMPLE_ASSISTANT));
+
+            messages.add(objectMapper.createObjectNode()
+                    .put("role", "user")
+                    .put("content", text.strip()));
+
+            requestBody.set("messages", messages);
+
+            String requestBodyJson = objectMapper.writeValueAsString(requestBody);
+
+            // Send the request using Apache HttpClient
             String response = Request.post(OPENAI_API_URL)
                     .addHeader("Authorization", STR."Bearer \{apiKey}")
                     .addHeader("Content-Type", "application/json")
-                    .bodyString(requestBody, org.apache.hc.core5.http.ContentType.APPLICATION_JSON)
+                    .bodyString(requestBodyJson, org.apache.hc.core5.http.ContentType.APPLICATION_JSON)
                     .execute()
                     .returnContent()
                     .asString(StandardCharsets.UTF_8);
@@ -97,7 +113,7 @@ public class OpenAiClient {
 
         } catch (Exception e) {
             log.error("Error during translation: {}", e.getMessage(), e);
-            return text; // Return original text in case of failure
+            return text;
         }
     }
 

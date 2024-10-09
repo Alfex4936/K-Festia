@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.search.engine.search.query.SearchResult;
 import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.session.SearchSession;
+import org.jsoup.safety.Cleaner;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -250,11 +251,13 @@ public class FestivalService {
         }
 
         // Clean the summary by removing HTML tags and unwanted characters
-        String cleanSummary = Jsoup.clean(festival.getSummary(), Safelist.none()); // preserves text within angle brackets if they are not valid HTML tags.
+        String sourceBodyHtml = Jsoup.clean(festival.getSummary(), Safelist.none()); // preserves text within angle brackets if they are not valid HTML tags.
+        Cleaner cleaner = new Cleaner(Safelist. none());
+        String cleanSummary = cleaner.clean(Jsoup. parse(sourceBodyHtml)).text();
 
         // Remove unwanted whitespace characters
         cleanSummary = cleanSummary.replace("\r", "").replace("\n", "")
-                .replace("&lt;","").replace("&gt;", "").trim();
+                .replace("&lt;","<").replace("&gt;", ">").trim();
 
         // Translate name and summary from Korean to English
         String translatedName = translationService.translateText(festival.getName());
