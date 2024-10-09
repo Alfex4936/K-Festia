@@ -45,6 +45,11 @@ public class HibernateSearchConfig {
                         .param("tags", "E,EP,EF,EC,ETN,ETM,IC,J,MM,SP,SSC,SSO,SC,SE,XPN,SF,SY,XSA,UNKNOWN")
                     .tokenFilter(KoreanNumberFilterFactory.class);
 
+            // Multi-lingual Analyzer
+            context.analyzer("multilingual").custom()
+                    .tokenizer(StandardTokenizerFactory.class)
+                    .charFilter(HTMLStripCharFilterFactory.class)
+                    .tokenFilter(LowerCaseFilterFactory.class);
         };
     }
 }

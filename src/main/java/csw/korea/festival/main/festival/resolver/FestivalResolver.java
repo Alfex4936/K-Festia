@@ -1,6 +1,7 @@
 package csw.korea.festival.main.festival.resolver;
 
 
+import csw.korea.festival.main.common.util.Korean;
 import csw.korea.festival.main.festival.model.FestivalPage;
 import csw.korea.festival.main.festival.service.FestivalService;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,16 @@ public class FestivalResolver {
     ) {
         int pageNumber = page != null ? page : 0;
         int pageSize = size != null ? size : 10;
+
+        // When the query is empty, return all festivals
+        if (query == null || query.isBlank()) {
+            return festivalService.getFestivals(null, null, null, pageNumber, pageSize);
+        }
+
+        // When the query is QWERTY Korean (e.g. "rudrl" -> "경기")
+        if (Korean.isQwerty(query)) {
+            query = Korean.toHangul(query);
+        }
         return festivalService.searchFestivals(query, pageNumber, pageSize);
     }
 }

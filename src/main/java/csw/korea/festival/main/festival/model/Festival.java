@@ -5,13 +5,13 @@ import csw.korea.festival.main.config.converter.LocalDateStringConverter;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Getter
 @Setter
@@ -62,7 +62,6 @@ public class Festival {
 
     private String naverUrl;   // Naver Map URL
 
-    @KeywordField
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "festival_categories", joinColumns = @JoinColumn(name = "festival_id"))
     @Enumerated(EnumType.STRING)
@@ -80,4 +79,16 @@ public class Festival {
 
     @Transient
     private KWeather.WeatherRequest weather;    // current weather information
+
+    @Transient
+    @FullTextField(analyzer = "multilingual")
+    @IndexingDependency(derivedFrom = @ObjectPath(@PropertyValue(propertyName = "categories")))
+    public String getCategoryDisplayNames() {
+        if (categories == null || categories.isEmpty()) {
+            return null;
+        }
+        return categories.stream()
+                .flatMap(cat -> Stream.of(cat.getDisplayNameEn(), cat.getDisplayNameKo()))
+                .collect(Collectors.joining(" "));
+    }
 }

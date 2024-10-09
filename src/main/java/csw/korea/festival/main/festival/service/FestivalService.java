@@ -165,7 +165,7 @@ public class FestivalService {
 
         SearchResult<Festival> result = searchSession.search(Festival.class)
                 .where(f -> f.match()
-                        .fields("name", "nameEn", "summary", "summaryEn", "address")
+                        .fields("name", "nameEn", "summary", "summaryEn", "address", "categoryDisplayNames")
                         .matching(query)
                 )
                 .fetch(page * size, size);
@@ -253,7 +253,8 @@ public class FestivalService {
         String cleanSummary = Jsoup.clean(festival.getSummary(), Safelist.none()); // preserves text within angle brackets if they are not valid HTML tags.
 
         // Remove unwanted whitespace characters
-        cleanSummary = cleanSummary.replace("\r", "").replace("\n", "").trim();
+        cleanSummary = cleanSummary.replace("\r", "").replace("\n", "")
+                .replace("&lt;","").replace("&gt;", "").trim();
 
         // Translate name and summary from Korean to English
         String translatedName = translationService.translateText(festival.getName());
