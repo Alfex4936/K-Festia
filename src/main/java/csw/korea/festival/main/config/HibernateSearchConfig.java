@@ -33,7 +33,6 @@ public class HibernateSearchConfig {
                         .param("ignoreCase", "true")
                     .tokenFilter(PorterStemFilterFactory.class);
 
-
             // Korean Analyzer
             context.analyzer("korean").custom()
                     .tokenizer(KoreanTokenizerFactory.class)

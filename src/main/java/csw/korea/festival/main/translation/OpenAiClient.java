@@ -1,4 +1,5 @@
 package csw.korea.festival.main.translation;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -6,11 +7,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import csw.korea.festival.main.festival.model.FestivalCategory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.hc.client5.http.fluent.Request;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Slf4j
@@ -19,19 +19,14 @@ import java.util.*;
 public class OpenAiClient {
 
     private static final String OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
-    private final ObjectMapper objectMapper;
-    @Value("${openai.api.key}")
-    private String apiKey;
-
     // Constants for the translation method
     private static final String TRANSLATE_SYSTEM_PROMPT = "Translates Korean text to English. Answer only translated text.";
     private static final String TRANSLATE_EXAMPLE_USER = "백두대간 봉자페스티벌";
     private static final String TRANSLATE_EXAMPLE_ASSISTANT = "The Baekdu Daegan Bongja Festival";
-
     // Constant prompt for the category method
     private static final String CATEGORIZE_PROMPT = """
             You are an assistant that categorizes festival descriptions into predefined categories. Assign each festival to one or more of the following categories:
-
+            
             1. Music & Performing Arts
             2. Visual Arts & Exhibitions
             3. Cultural & Heritage
@@ -42,21 +37,26 @@ public class OpenAiClient {
             8. Literature & Education
             9. Seasonal & Holiday
             10. Community & Social
-
+            
             If a festival doesn't fit any of the above categories, assign it to "Other".
-
+            
             Provide the categories as a comma-separated list without any additional text.
-
+            
             Example:
             Festival Description: "A grand music festival featuring various artists and live performances."
             Categories: Music & Performing Arts
-
+            
             Festival Description: "An art exhibition showcasing modern sculptures and paintings."
             Categories: Visual Arts & Exhibitions
-
+            
             Festival Description: "A community gathering with food stalls and live entertainment."
             Categories: Community & Social, Food & Culinary
             """;
+    private final ObjectMapper objectMapper;
+    private final WebClient webClient;
+
+    @Value("${openai.api.key}")
+    private String apiKey;
 
     public String translate(String text) {
         if (text == null || text.isEmpty()) {
@@ -91,14 +91,15 @@ public class OpenAiClient {
 
             String requestBodyJson = objectMapper.writeValueAsString(requestBody);
 
-            // Send the request using Apache HttpClient
-            String response = Request.post(OPENAI_API_URL)
-                    .addHeader("Authorization", STR."Bearer \{apiKey}")
-                    .addHeader("Content-Type", "application/json")
-                    .bodyString(requestBodyJson, org.apache.hc.core5.http.ContentType.APPLICATION_JSON)
-                    .execute()
-                    .returnContent()
-                    .asString(StandardCharsets.UTF_8);
+            // Send the request using WebClient
+            String response = webClient.post()
+                    .uri(OPENAI_API_URL)
+                    .header("Authorization", "Bearer " + apiKey)
+                    .header("Content-Type", "application/json")
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block(); // Blocking call;
 
             JsonNode root = objectMapper.readTree(response);
 
@@ -144,13 +145,30 @@ public class OpenAiClient {
 
             String requestBody = objectMapper.writeValueAsString(requestBodyMap);
 
-            String response = Request.post(OPENAI_API_URL)
-                    .addHeader("Authorization", STR."Bearer \{apiKey}")
-                    .addHeader("Content-Type", "application/json")
-                    .bodyString(requestBody, org.apache.hc.core5.http.ContentType.APPLICATION_JSON)
-                    .execute()
-                    .returnContent()
-                    .asString(StandardCharsets.UTF_8);
+            String response = webClient.post()
+                    .uri(OPENAI_API_URL)
+                    .header("Authorization", "Bearer " + apiKey)
+                    .header("Content-Type", "application/json")
+                    .bodyValue(requestBody)
+                    .retrieve()
+//                    .onStatus(HttpStatus::is4xxClientError, clientResponse -> {
+//                        // Handle 4xx errors
+//                        return clientResponse.bodyToMono(String.class)
+//                                .flatMap(errorBody -> {
+//                                    log.error("Client error: {}", errorBody);
+//                                    return Mono.error(new RuntimeException("Client error"));
+//                                });
+//                    })
+//                    .onStatus(HttpStatus::is5xxServerError, clientResponse -> {
+//                        // Handle 5xx errors
+//                        return clientResponse.bodyToMono(String.class)
+//                                .flatMap(errorBody -> {
+//                                    log.error("Server error: {}", errorBody);
+//                                    return Mono.error(new RuntimeException("Server error"));
+//                                });
+//                    })
+                    .bodyToMono(String.class)
+                    .block(); // Blocking call
 
             JsonNode root = objectMapper.readTree(response);
 

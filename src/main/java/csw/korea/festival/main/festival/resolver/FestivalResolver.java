@@ -3,6 +3,7 @@ package csw.korea.festival.main.festival.resolver;
 
 import csw.korea.festival.main.common.util.Korean;
 import csw.korea.festival.main.festival.model.FestivalPage;
+import csw.korea.festival.main.festival.service.FestivalSearchService;
 import csw.korea.festival.main.festival.service.FestivalService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Controller;
 public class FestivalResolver {
 
     private final FestivalService festivalService;
+    private final FestivalSearchService festivalSearchService;
 
     /**
      * Fetches a paginated list of festivals based on the provided month and location.
@@ -33,7 +35,6 @@ public class FestivalResolver {
             @Argument Integer page,
             @Argument Integer size
     ) {
-
         return festivalService.getFestivals(month, latitude, longitude, page, size);
     }
 
@@ -55,6 +56,6 @@ public class FestivalResolver {
         if (Korean.isQwerty(query)) {
             query = Korean.toHangul(query);
         }
-        return festivalService.searchFestivals(query, pageNumber, pageSize);
+        return festivalSearchService.searchFestivals(query, pageNumber, pageSize);
     }
 }

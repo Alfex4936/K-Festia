@@ -80,6 +80,14 @@ public class Festival {
     @Transient
     private KWeather.WeatherRequest weather;    // current weather information
 
+//    @Transient
+//    public boolean isFinished() {
+//        if (this.endDate != null) {
+//            return this.endDate.isBefore(LocalDate.now());
+//        }
+//        return false;
+//    }
+
     @Transient
     @FullTextField(analyzer = "multilingual")
     @IndexingDependency(derivedFrom = @ObjectPath(@PropertyValue(propertyName = "categories")))

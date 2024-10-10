@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ExternalAPIService {
+public class KakaoAPIService {
 
     private final Cache<String, KWeather.WeatherRequest> weatherCache = Caffeine.newBuilder()
             .expireAfterWrite(30, TimeUnit.MINUTES) // expires after 30 mins
