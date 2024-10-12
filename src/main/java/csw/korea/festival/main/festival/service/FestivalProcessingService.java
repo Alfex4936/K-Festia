@@ -1,5 +1,7 @@
 package csw.korea.festival.main.festival.service;
 
+import csw.korea.festival.main.common.dto.AddressComponents;
+import csw.korea.festival.main.common.util.KoreanAddressParser;
 import csw.korea.festival.main.config.LimitedThreadFactory;
 import csw.korea.festival.main.festival.model.Festival;
 import csw.korea.festival.main.festival.model.FestivalCategory;
@@ -36,6 +38,7 @@ public class FestivalProcessingService {
     private final FestivalRepository festivalRepository;
     private final TranslationService translationService;
     private final CategorizationService categorizationService;
+    private final KoreanAddressParser addressParser = new KoreanAddressParser();
 
     /**
      * Translates and categorizes a festival.
@@ -205,6 +208,27 @@ public class FestivalProcessingService {
 
         festival.setUsageFeeCategory(CategorizationService.categorizeUsageFee(dto.getUsageFeeInfo()));
 
+        // Parse address components
+        AddressComponents components = addressParser.parseAddress(dto.getAddress());
+        festival.setProvince(components.getProvince());
+        festival.setCity(components.getCity());
+        festival.setDistrict(components.getDistrict());
+        festival.setTown(components.getTown());
+        festival.setStreet(components.getStreet());
+
         return festival;
+    }
+
+    public void updateFestivalAddresses() {
+        List<Festival> festivals = festivalRepository.findAll();
+        for (Festival festival : festivals) {
+            AddressComponents components = addressParser.parseAddress(festival.getAddress());
+            festival.setProvince(components.getProvince());
+            festival.setCity(components.getCity());
+            festival.setDistrict(components.getDistrict());
+            festival.setTown(components.getTown());
+            festival.setStreet(components.getStreet());
+            festivalRepository.save(festival);
+        }
     }
 }

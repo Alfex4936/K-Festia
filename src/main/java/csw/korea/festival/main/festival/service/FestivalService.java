@@ -146,4 +146,17 @@ public class FestivalService {
 
         return festivalPage;
     }
+
+    public List<Festival> getFestivalsByProvince(String province) {
+        return festivalRepository.findByProvince(province);
+    }
+
+    public List<Festival> getFestivalsByCity(String city) {
+        return festivalRepository.findByCity(city);
+    }
+
+    public List<Festival> getFestivalsByProvinceAndCity(String province, String city) {
+        return festivalRepository.findByProvinceAndCity(province, city);
+    }
+
 }

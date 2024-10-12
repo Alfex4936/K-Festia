@@ -16,7 +16,13 @@ import java.util.stream.Stream;
 @Getter
 @Setter
 @Entity
-@Table(name = "festivals")
+@Table(name = "festivals",
+        indexes = {
+                @Index(name = "idx_province", columnList = "province"),
+                @Index(name = "idx_city", columnList = "city"),
+                @Index(name = "idx_district", columnList = "district")
+        }
+)
 @Access(AccessType.FIELD)
 @Indexed
 public class Festival {
@@ -73,6 +79,21 @@ public class Festival {
 
     @Enumerated(EnumType.STRING)
     private FestivalUsageFeeCategory usageFeeCategory;
+
+    @FullTextField(analyzer = "korean")
+    private String province;
+
+    @FullTextField(analyzer = "korean")
+    private String city;
+
+    @FullTextField(analyzer = "korean")
+    private String district;
+
+    @FullTextField(analyzer = "korean")
+    private String town;
+
+    @FullTextField(analyzer = "korean")
+    private String street;
 
     @Transient
     private Double distance;   // Calculated dynamically

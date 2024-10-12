@@ -12,6 +12,14 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface FestivalRepository extends JpaRepository<Festival, Long> {
+    List<Festival> findByProvince(String province);
+
+    List<Festival> findByCity(String city);
+
+    List<Festival> findByDistrict(String district);
+
+    List<Festival> findByProvinceAndCity(String province, String city);
+
     @NotNull Optional<Festival> findById(@NotNull Long id);
     List<Festival> findByFestivalIdIn(Set<String> festivalIds);
 

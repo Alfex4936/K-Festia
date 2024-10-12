@@ -44,7 +44,7 @@ public class FestivalWeatherService {
                         KWeather.WeatherRequest weather = kakaoAPIService.getWeatherFromCoordinates(
                                 festival.getLatitude(), festival.getLongitude());
                         festival.setWeather(weather);
-                        log.info("Fetched weather for festival '{}' ({})", festival.getName(), weather);
+                        // log.info("Fetched weather for festival '{}' ({})", festival.getName(), weather);
                     } catch (Exception e) {
                         log.error("Error fetching weather for festival '{}': {}", festival.getName(), e.getMessage());
                         festival.setWeather(null);
