@@ -60,11 +60,18 @@
 			<artifactId>spring-boot-starter-graphql</artifactId>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/com.graphql-java-kickstart/graphql-java-servlet -->
+		<dependency>
+			<groupId>com.graphql-java-kickstart</groupId>
+			<artifactId>graphql-java-servlet</artifactId>
+			<version>16.0.0</version>
+		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/com.graphql-java-kickstart/graphql-java-tools -->
 		<dependency>
 			<groupId>com.graphql-java-kickstart</groupId>
 			<artifactId>graphql-java-tools</artifactId>
-			<version>13.1.1</version>
+			<version>14.0.0</version>
 		</dependency>
 
 		<dependency>
@@ -209,6 +216,13 @@
 			<groupId>org.jsoup</groupId>
 			<artifactId>jsoup</artifactId>
 			<version>1.18.1</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.bucket4j/bucket4j-core -->
+		<dependency>
+			<groupId>com.bucket4j</groupId>
+			<artifactId>bucket4j-core</artifactId>
+			<version>8.10.1</version>
 		</dependency>
 
 	</dependencies>

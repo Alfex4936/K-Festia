@@ -1,6 +1,7 @@
 package csw.korea.festival.main.festival.resolver;
 
 
+import csw.korea.festival.main.common.annotation.RateLimited;
 import csw.korea.festival.main.common.util.Korean;
 import csw.korea.festival.main.festival.model.FestivalPage;
 import csw.korea.festival.main.festival.service.FestivalSearchService;
@@ -27,6 +28,7 @@ public class FestivalResolver {
      * @param size      Optional page size. Defaults to 10 if not provided.
      * @return Paginated list of festivals matching the criteria.
      */
+    @RateLimited(key = "festivals", capacity = 1, refillTokens = 100, refillDurationMillis = 60000)
     @QueryMapping
     public FestivalPage festivals(
             @Argument String month,
@@ -38,6 +40,15 @@ public class FestivalResolver {
         return festivalService.getFestivals(month, latitude, longitude, page, size);
     }
 
+    /**
+     * Searches for festivals based on a query string.
+     *
+     * @param query The search query.
+     * @param page  Optional page number.
+     * @param size  Optional page size.
+     * @return A paginated list of festivals matching the query.
+     */
+    @RateLimited(key = "searchFestivals", capacity = 50, refillTokens = 50, refillDurationMillis = 60000)
     @QueryMapping
     public FestivalPage searchFestivals(
             @Argument String query,
