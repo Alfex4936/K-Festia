@@ -3,6 +3,7 @@ package csw.korea.festival.main.config;
 import org.apache.lucene.analysis.charfilter.HTMLStripCharFilterFactory;
 import org.apache.lucene.analysis.cjk.CJKBigramFilter;
 import org.apache.lucene.analysis.cjk.CJKWidthCharFilterFactory;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
 import org.apache.lucene.analysis.core.StopFilterFactory;
 import org.apache.lucene.analysis.en.EnglishPossessiveFilterFactory;
@@ -12,9 +13,12 @@ import org.apache.lucene.analysis.ko.KoreanPartOfSpeechStopFilterFactory;
 import org.apache.lucene.analysis.ko.KoreanReadingFormFilterFactory;
 import org.apache.lucene.analysis.ko.KoreanTokenizerFactory;
 import org.apache.lucene.analysis.standard.StandardTokenizerFactory;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.hibernate.search.backend.lucene.analysis.LuceneAnalysisConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.io.IOException;
 
 @Configuration
 public class HibernateSearchConfig {
@@ -49,6 +53,14 @@ public class HibernateSearchConfig {
                     .tokenizer(StandardTokenizerFactory.class)
                     .charFilter(HTMLStripCharFilterFactory.class)
                     .tokenFilter(LowerCaseFilterFactory.class);
+
+            try {
+                context.analyzer("seok").instance(new CustomKoreanAnalyzer());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            context.analyzer("keyword").instance(new KeywordAnalyzer());
+
         };
     }
 }

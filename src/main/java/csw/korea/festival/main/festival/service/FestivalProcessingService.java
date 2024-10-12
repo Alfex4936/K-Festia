@@ -58,7 +58,12 @@ public class FestivalProcessingService {
         String cleanSummary = cleaner.clean(Jsoup.parse(sourceBodyHtml)).text();
 
         // Remove unwanted whitespace characters
-        cleanSummary = cleanSummary.replace("\r", "").replace("\n", "").replace("&lt;", "<").replace("&gt;", ">").trim();
+        cleanSummary = cleanSummary.replace("\r", "")
+                .replace("\n", "")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("\"", "'")
+                .trim();
 
         // Translate name and summary from Korean to English
         String translatedName = translationService.translateText(festival.getName());

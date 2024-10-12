@@ -18,6 +18,8 @@ public class FestivalSearchService {
 
     private final EntityManager entityManager;
 
+    private final FestivalWeatherService festivalWeatherService;
+
     public FestivalPage searchFestivals(String query, int page, int size) {
         SearchSession searchSession = Search.session(entityManager);
 
@@ -30,29 +32,35 @@ public class FestivalSearchService {
                         .should(f.match()
                                 .fields("summary", "summaryEn")
                                 .matching(query)
+                                .analyzer("korean")
                                 .boost(2.0f))
                         .should(f.match()
-                                .fields("address", "categoryDisplayNames")
+                                .field("categoryDisplayNames")
                                 .matching(query)
                                 .boost(1.0f))
-                        .should(f.match()
-                                .fields("province", "city", "district", "town", "street")
+                        .should(f.phrase()
+                                .fields("address", "province", "city", "district", "town", "street")
                                 .matching(query)
-                                .boost(0.5f))
+                                .analyzer("keyword")
+                                .boost(5.0f))
+                        .minimumShouldMatchNumber(1) // at least one should clause must match for a document to be included.
                 )
                 .fetch(page * size, size);
 
-        List<Festival> festivals = result.hits();
-        long totalHits = result.total().hitCount();
-        int totalPages = (int) ((totalHits + size - 1) / size); // Ceiling division
+        int totalHits = (int) result.total().hitCount();
+        int start = Math.min(page * size, totalHits);
+        int end = Math.min(start + size, totalHits);
+        List<Festival> paginatedFestivals = result.hits().subList(start, end);
 
+        // Fetch weather for paginated festivals
+        paginatedFestivals = festivalWeatherService.processFestivalsWeather(paginatedFestivals);
 
         FestivalPage festivalPage = new FestivalPage();
-        festivalPage.setContent(festivals);
+        festivalPage.setContent(paginatedFestivals);
         festivalPage.setPageNumber(page);
         festivalPage.setPageSize(size);
-        festivalPage.setTotalElements((int) totalHits);
-        festivalPage.setTotalPages(totalPages);
+        festivalPage.setTotalElements(totalHits);
+        festivalPage.setTotalPages((totalHits + size - 1) / size); // Ceiling division
 
         return festivalPage;
     }

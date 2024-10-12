@@ -16,13 +16,7 @@ import java.util.stream.Stream;
 @Getter
 @Setter
 @Entity
-@Table(name = "festivals",
-        indexes = {
-                @Index(name = "idx_province", columnList = "province"),
-                @Index(name = "idx_city", columnList = "city"),
-                @Index(name = "idx_district", columnList = "district")
-        }
-)
+@Table(name = "festivals")
 @Access(AccessType.FIELD)
 @Indexed
 public class Festival {
@@ -33,10 +27,10 @@ public class Festival {
     @Column(unique = true, nullable = false)
     private String festivalId; // Festival ID
 
-    @FullTextField(analyzer = "korean")
+    @FullTextField(analyzer = "seok")
     private String name;       // Festival Name
 
-    @FullTextField(analyzer = "korean")
+    @FullTextField(analyzer = "seok")
     @Column(length = 1000)
     private String summary;    // Festival Summary
 
@@ -48,7 +42,7 @@ public class Festival {
     @Column(name = "end_date")
     private LocalDate endDate;
 
-    @FullTextField(analyzer = "korean")
+    @FullTextField(analyzer = "seok")
     private String address;    // Address
 
     private String usageFeeInfo; // Festival Usage Fee Information
@@ -80,19 +74,19 @@ public class Festival {
     @Enumerated(EnumType.STRING)
     private FestivalUsageFeeCategory usageFeeCategory;
 
-    @FullTextField(analyzer = "korean")
+    @FullTextField(analyzer = "seok")
     private String province;
 
-    @FullTextField(analyzer = "korean")
+    @FullTextField(analyzer = "seok")
     private String city;
 
-    @FullTextField(analyzer = "korean")
+    @FullTextField(analyzer = "seok")
     private String district;
 
-    @FullTextField(analyzer = "korean")
+    @FullTextField(analyzer = "seok")
     private String town;
 
-    @FullTextField(analyzer = "korean")
+    @FullTextField(analyzer = "seok")
     private String street;
 
     @Transient
