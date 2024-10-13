@@ -24,6 +24,7 @@ public class HibernateSearchConfig {
     @Bean
     public LuceneAnalysisConfigurer luceneAnalysisConfigurer() {
         return context -> {
+
             // English Analyzer
             context.analyzer("english").custom()
                     .tokenizer(StandardTokenizerFactory.class)
@@ -31,8 +32,8 @@ public class HibernateSearchConfig {
                     .tokenFilter(LowerCaseFilterFactory.class)
                     .tokenFilter(EnglishPossessiveFilterFactory.class)
                     .tokenFilter(StopFilterFactory.class)
-                        .param("words", "lucene/english_stop.txt")
-                        .param("ignoreCase", "true")
+                    // let it use the default EnglishAnalyzer stopwords
+                    .param("ignoreCase", "true")
                     .tokenFilter(PorterStemFilterFactory.class);
 
             // Korean Analyzer
@@ -42,8 +43,8 @@ public class HibernateSearchConfig {
                     .charFilter(CJKWidthCharFilterFactory.class)
                     .tokenFilter(KoreanReadingFormFilterFactory.class)
                     .tokenFilter(KoreanPartOfSpeechStopFilterFactory.class)
-                        // FIX ME: If adverbs are not meaningful for your searches, consider adding MAG and MAJ to the list.
-                        .param("tags", "E,EP,EF,EC,ETN,ETM,IC,J,MM,SP,SSC,SSO,SC,SE,XPN,SF,SY,XSA,UNKNOWN")
+                    // FIX ME: If adverbs are not meaningful for your searches, consider adding MAG and MAJ to the list.
+                    .param("tags", "E,EP,EF,EC,ETN,ETM,IC,J,MM,SP,SSC,SSO,SC,SE,XPN,SF,SY,XSA,UNKNOWN")
                     .tokenFilter(KoreanNumberFilterFactory.class);
 
             // Multi-lingual Analyzer

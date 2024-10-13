@@ -63,10 +63,11 @@ public class FestivalResolver {
             return festivalService.getFestivals(null, null, null, pageNumber, pageSize);
         }
 
+        // TODO: It cannot know whether the query is Korean or not well (As I have english text too)
         // When the query is QWERTY Korean (e.g. "rudrl" -> "경기")
-        if (Korean.isQwerty(query)) {
-            query = Korean.toHangul(query);
-        }
+//        if (Korean.isQwerty(query)) {
+//            query = Korean.toHangul(query);
+//        }
         return festivalSearchService.searchFestivals(query, pageNumber, pageSize);
     }
 }
