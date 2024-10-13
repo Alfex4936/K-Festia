@@ -1,4 +1,4 @@
-package csw.korea.festival.main.config;
+package csw.korea.festival.main.config.lucene;
 
 import csw.korea.festival.main.festival.model.Festival;
 import jakarta.persistence.EntityManager;

@@ -1,7 +1,6 @@
-package csw.korea.festival.main.config;
+package csw.korea.festival.main.config.lucene;
 
 import org.apache.lucene.analysis.charfilter.HTMLStripCharFilterFactory;
-import org.apache.lucene.analysis.cjk.CJKBigramFilter;
 import org.apache.lucene.analysis.cjk.CJKWidthCharFilterFactory;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
@@ -13,7 +12,6 @@ import org.apache.lucene.analysis.ko.KoreanPartOfSpeechStopFilterFactory;
 import org.apache.lucene.analysis.ko.KoreanReadingFormFilterFactory;
 import org.apache.lucene.analysis.ko.KoreanTokenizerFactory;
 import org.apache.lucene.analysis.standard.StandardTokenizerFactory;
-import org.apache.lucene.queryparser.classic.ParseException;
 import org.hibernate.search.backend.lucene.analysis.LuceneAnalysisConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

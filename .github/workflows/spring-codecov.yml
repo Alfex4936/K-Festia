@@ -39,6 +39,7 @@ jobs:
           mkdir -p src/main/resources/db/migration
           echo "${{ secrets.V1_SQL }}" | base64 --decode > src/main/resources/db/migration/V1__Create_festivals_table.sql
           echo "${{ secrets.BAD_WORD_LIST }}" | base64 --decode > src/main/resources/badwords.txt
+          mkdir -p src/test/resources
           echo "${{ secrets.BAD_WORD_LIST }}" | base64 --decode > src/test/resources/badwords.txt
 
       # Ensure Maven Wrapper is executable (if using Maven Wrapper)

@@ -8,7 +8,11 @@ application-secret.properties
 badwords.txt
 *.db
 *.sql
-lucene/
+
+# Ignore only the top-level 'lucene/' directory
+/lucene/
+# Do not ignore other 'lucene' directories
+!/src/main/resources/lucene/
 
 ### STS ###
 .apt_generated

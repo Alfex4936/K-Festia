@@ -6,6 +6,7 @@ import graphql.ErrorType;
 import graphql.GraphQLError;
 import graphql.language.SourceLocation;
 import graphql.schema.DataFetchingEnvironment;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter;
@@ -25,7 +26,7 @@ public class GraphQLConfig {
         return new DataFetcherExceptionResolverAdapter() {
 
             @Override
-            protected GraphQLError resolveToSingleError(Throwable ex, DataFetchingEnvironment env) {
+            protected GraphQLError resolveToSingleError(@NotNull Throwable ex, @NotNull DataFetchingEnvironment env) {
                 if (ex instanceof RateLimitExceededException) {
                     return new CustomGraphQLRateLimitError(
                             ex.getMessage(),
@@ -34,7 +35,6 @@ public class GraphQLConfig {
                             Map.of("code", "RATE_LIMIT_EXCEEDED")
                     );
                 }
-                // Handle other exceptions if needed
                 return super.resolveToSingleError(ex, env);
             }
         };
