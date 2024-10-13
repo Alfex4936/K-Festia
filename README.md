@@ -100,3 +100,5 @@ users can effortlessly discover and explore festivals tailored to their interest
    ```
 
 > **Note**: Customize queries as per frontend requirements. Utilize GraphQL clients like [Apollo](https://www.apollographql.com/) for efficient data fetching.
+
+[![codecov](https://codecov.io/gh/Alfex4936/K-Festia/graph/badge.svg?token=5O9FFQ3QBN)](https://codecov.io/gh/Alfex4936/K-Festia)

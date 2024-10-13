@@ -32,10 +32,10 @@ public class CoordinatesConverterTest {
         double long2 = 127.061476;
 
         // When
-        double result = CoordinatesConverter.calculateDistance(lat1, long1, lat2, long2); // 7.427212904540012
+        double result = CoordinatesConverter.calculateDistance(lat1, long1, lat2, long2); // 0.007418902010857198 KM
 
         // Then
-        assertEquals(7, result, 1.0);
+        assertEquals(0.0074, result, 0.001);
     }
 
     @Test

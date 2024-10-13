@@ -98,7 +98,7 @@ public class CustomKoreanAnalyzer extends Analyzer {
     }
 
 
-    public static class SimpleKoreanTokenizer extends Tokenizer {
+    public static final class SimpleKoreanTokenizer extends Tokenizer {
         private final CharTermAttribute charTermAttribute = addAttribute(CharTermAttribute.class);
         private final OffsetAttribute offsetAttribute = addAttribute(OffsetAttribute.class);
         private final PositionIncrementAttribute positionIncrementAttribute = addAttribute(PositionIncrementAttribute.class);

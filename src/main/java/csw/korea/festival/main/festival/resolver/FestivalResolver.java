@@ -28,7 +28,7 @@ public class FestivalResolver {
      * @param size      Optional page size. Defaults to 10 if not provided.
      * @return Paginated list of festivals matching the criteria.
      */
-    @RateLimited(key = "festivals", capacity = 1, refillTokens = 100, refillDurationMillis = 60000)
+    @RateLimited(key = "festivals", capacity = 100, refillTokens = 100, refillDurationMillis = 60000)
     @QueryMapping
     public FestivalPage festivals(
             @Argument String month,
