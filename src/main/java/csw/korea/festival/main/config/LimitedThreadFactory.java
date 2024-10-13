@@ -17,7 +17,7 @@ public class LimitedThreadFactory implements ThreadFactory {
     @Override
     public Thread newThread(@NotNull Runnable r) {
         Runnable wrappedRunnable = () -> {
-            boolean permitAcquired = false;
+            boolean permitAcquired = false; // TODO: or tryAcquire?
             try {
                 semaphore.acquire();
                 permitAcquired = true;

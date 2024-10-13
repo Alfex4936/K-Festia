@@ -36,6 +36,7 @@ jobs:
       - name: Setup secrets
         run: |
           echo "${{ secrets.APPLICATION_YML }}" | base64 --decode > src/main/resources/application-secret.yml
+          mkdir -p src/main/resources/db/migration
           echo "${{ secrets.V1_SQL }}" | base64 --decode > src/main/resources/db/migration/V1__Create_festivals_table.sql
           echo "${{ secrets.BAD_WORD_LIST }}" | base64 --decode > src/main/resources/badwords.txt
           echo "${{ secrets.BAD_WORD_LIST }}" | base64 --decode > src/test/resources/badwords.txt
