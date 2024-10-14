@@ -212,6 +212,12 @@
 			<version>9.12.0</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-analysis-icu -->
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-analysis-icu</artifactId>
+			<version>9.12.0</version>
+		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.jboss.logging/jboss-logging -->
 <!--		Hibernate Search now depends on JBoss Logging 3.6.-->
@@ -312,11 +318,11 @@
 						</goals>
 						<configuration>
 							<outputDirectory>${project.build.directory}/jacoco</outputDirectory>
-							<reports>
+							<formats>
 								<xml>true</xml>        <!-- Ensure XML report is generated -->
 								<csv>false</csv>       <!-- Disable CSV report -->
 								<html>true</html>      <!-- Enable HTML report for visualization -->
-							</reports>
+							</formats>
 							<excludes>
 								<exclude>csw/korea/festival/main/common/annotation/**</exclude>
 								<!-- Exclude all classes ending with 'Config' -->

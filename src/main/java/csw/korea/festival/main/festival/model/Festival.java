@@ -27,10 +27,10 @@ public class Festival {
     @Column(unique = true, nullable = false)
     private String festivalId; // Festival ID
 
-    @FullTextField(analyzer = "seok")
+    @FullTextField(analyzer = "korean")
     private String name;       // Festival Name
 
-    @FullTextField(analyzer = "seok")
+    @FullTextField(analyzer = "korean")
     @Column(length = 1000)
     private String summary;    // Festival Summary
 
@@ -42,7 +42,7 @@ public class Festival {
     @Column(name = "end_date")
     private LocalDate endDate;
 
-    @FullTextField(analyzer = "seok")
+    @FullTextField(analyzer = "korean")
     private String address;    // Address
 
     private String usageFeeInfo; // Festival Usage Fee Information

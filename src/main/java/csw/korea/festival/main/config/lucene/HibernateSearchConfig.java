@@ -7,11 +7,16 @@ import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
 import org.apache.lucene.analysis.core.StopFilterFactory;
 import org.apache.lucene.analysis.en.EnglishPossessiveFilterFactory;
 import org.apache.lucene.analysis.en.PorterStemFilterFactory;
+import org.apache.lucene.analysis.icu.ICUNormalizer2FilterFactory;
+import org.apache.lucene.analysis.icu.segmentation.ICUTokenizerFactory;
 import org.apache.lucene.analysis.ko.KoreanNumberFilterFactory;
 import org.apache.lucene.analysis.ko.KoreanPartOfSpeechStopFilterFactory;
 import org.apache.lucene.analysis.ko.KoreanReadingFormFilterFactory;
 import org.apache.lucene.analysis.ko.KoreanTokenizerFactory;
+import org.apache.lucene.analysis.ngram.EdgeNGramFilterFactory;
+import org.apache.lucene.analysis.ngram.NGramFilterFactory;
 import org.apache.lucene.analysis.standard.StandardTokenizerFactory;
+import org.apache.lucene.analysis.synonym.SynonymGraphFilterFactory;
 import org.hibernate.search.backend.lucene.analysis.LuceneAnalysisConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,28 +35,53 @@ public class HibernateSearchConfig {
                     .tokenizer(StandardTokenizerFactory.class)
                     .charFilter(HTMLStripCharFilterFactory.class)
                     .tokenFilter(LowerCaseFilterFactory.class)
+                    .tokenFilter(SynonymGraphFilterFactory.class)
+                    .param("synonyms", "lucene/english_synonyms.txt")
+                    .param("ignoreCase", "true")
+                    .param("expand", "true")
+
+                    .tokenFilter(EdgeNGramFilterFactory.class)
+                    .param("minGramSize", "3")
+                    .param("maxGramSize", "10")
                     .tokenFilter(EnglishPossessiveFilterFactory.class)
+
                     .tokenFilter(StopFilterFactory.class)
-                    // let it use the default EnglishAnalyzer stopwords
                     .param("ignoreCase", "true")
                     .tokenFilter(PorterStemFilterFactory.class);
+
 
             // Korean Analyzer
             context.analyzer("korean").custom()
                     .tokenizer(KoreanTokenizerFactory.class)
                     .charFilter(HTMLStripCharFilterFactory.class)
                     .charFilter(CJKWidthCharFilterFactory.class)
+
+                    .tokenFilter(LowerCaseFilterFactory.class)
+                    .tokenFilter(SynonymGraphFilterFactory.class)
+                    .param("synonyms", "lucene/korean_synonyms.txt")
+                    .param("ignoreCase", "true")
+                    .param("expand", "true")
+
                     .tokenFilter(KoreanReadingFormFilterFactory.class)
                     .tokenFilter(KoreanPartOfSpeechStopFilterFactory.class)
-                    // FIX ME: If adverbs are not meaningful for your searches, consider adding MAG and MAJ to the list.
+                    // FIX ME: If adverbs are not meaningful for searches, consider adding MAG and MAJ to the list.
                     .param("tags", "E,EP,EF,EC,ETN,ETM,IC,J,MM,SP,SSC,SSO,SC,SE,XPN,SF,SY,XSA,UNKNOWN")
-                    .tokenFilter(KoreanNumberFilterFactory.class);
+                    .tokenFilter(KoreanNumberFilterFactory.class)
+
+                    .tokenFilter(NGramFilterFactory.class)
+                    .param("minGramSize", "2")
+                    .param("maxGramSize", "5");
 
             // Multi-lingual Analyzer
             context.analyzer("multilingual").custom()
-                    .tokenizer(StandardTokenizerFactory.class)
+                    .tokenizer(ICUTokenizerFactory.class)
                     .charFilter(HTMLStripCharFilterFactory.class)
-                    .tokenFilter(LowerCaseFilterFactory.class);
+                    .tokenFilter(LowerCaseFilterFactory.class)
+                    .tokenFilter(ICUNormalizer2FilterFactory.class)
+                    .param("name", "nfkc_cf")
+                    .tokenFilter(StopFilterFactory.class)
+                    .param("ignoreCase", "true");
+//                    .param("words", "stopwords.txt");
 
             try {
                 context.analyzer("seok").instance(new CustomKoreanAnalyzer());

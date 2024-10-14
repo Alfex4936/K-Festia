@@ -35,56 +35,77 @@ public class FestivalSearchService {
     public FestivalPage searchFestivals(String query, int page, int size) {
         SearchSession searchSession = Search.session(entityManager);
 
-        // 1. 쿼리를 개별 단어로 분할
-        // String[] terms = query.split("\\s+");
+        // 1. Split the query into individual terms
+        String[] terms = query.split("\\s+");
 
-        String qwertyKorean = Korean.toHangul(query); // can be just normal English words but also trying to convert to Korean
+        // 2. Convert each term using qwerty to Korean conversion
+        String[] qwertyTerms = Arrays.stream(terms)
+                .map(Korean::toHangul)
+                .toArray(String[]::new);
 
-        // 2. 부울 쿼리 구성
+        // 3. Build the boolean query dynamically
         SearchResult<Festival> result = searchSession.search(Festival.class)
-                .where(f -> f.bool()
-                        .should(f.match()
-                                .fields("name", "nameEn")
-                                .matching(query)
-                                .boost(4.0f))
-                        .should(f.match()
-                                .fields("name", "nameEn")
-                                .matching(qwertyKorean)
-                                .boost(3.0f))
+                .where(f -> {
+                    // Start a boolean predicate
+                    BooleanPredicateClausesStep<?> boolQuery = f.bool();
 
-                        .should(f.match()
+                    // For each term, add 'should' clauses
+                    for (String term : terms) {
+                        boolQuery.should(f.match()
+                                .fields("name", "nameEn")
+                                .matching(term)
+                                .boost(9.0f));
+                        boolQuery.should(f.match()
                                 .fields("summary", "summaryEn")
-                                .matching(query)
-                                .boost(2.0f))
-                        .should(f.match()
-                                .fields("summary", "summaryEn")
-                                .matching(qwertyKorean)
-                                .boost(1.0f))
-
-                        .should(f.match()
+                                .matching(term)
+                                .boost(7.0f));
+                        boolQuery.should(f.match()
                                 .field("categoryDisplayNames")
-                                .matching(query)
-                                .boost(1.0f))
-
-                        .should(f.wildcard()
+                                .matching(term)
+                                .boost(6.0f));
+                        boolQuery.should(f.wildcard()
                                 .field("address")
-                                .matching(STR."*\{query}*")
-                                .boost(5.0f))
-                        .should(f.wildcard()
-                                .field("address")
-                                .matching(STR."*\{qwertyKorean}*")
-                                .boost(2.0f))
+                                .matching("*" + term + "*")
+                                .boost(10.0f));
+                        boolQuery.should(f.phrase()
+                                .fields("province", "city", "district", "town", "street")
+                                .matching(term)
+                                // .slop(2)
+                                .boost(15.0f));
+                    }
 
-                        .should(f.phrase()
-                                .fields("province", "city", "district", "town", "street")
-                                .matching(query)
-                                .boost(6.0f))
-                        .should(f.phrase()
-                                .fields("province", "city", "district", "town", "street")
-                                .matching(qwertyKorean)
-                                .boost(3.0f))
-                        .minimumShouldMatchNumber(1) // at least one should clause must match for a document to be included.
-                )
+                    // Do the same for qwerty Korean converted terms
+//                    for (String term : qwertyTerms) {
+//                        boolQuery.should(f.match()
+//                                .fields("name", "nameEn")
+//                                .matching(term)
+//                                .boost(3.0f));
+//                        boolQuery.should(f.match()
+//                                .fields("summary", "summaryEn")
+//                                .matching(term)
+//                                .boost(1.0f));
+//                        boolQuery.should(f.wildcard()
+//                                .field("address")
+//                                .matching("*" + term + "*")
+//                                .boost(2.0f));
+//                        boolQuery.should(f.phrase()
+//                                .fields("province", "city", "district", "town", "street")
+//                                .matching(term)
+//                                .slop(2)
+//                                .boost(3.0f));
+//                    }
+
+                    // 4. minimumShouldMatch to prefer documents that match more terms
+                    // at least half of the terms to match
+                    // int minShouldMatch = Math.max(1, terms.length);
+
+                    //  Require a percentage of terms to match.
+                    boolQuery.minimumShouldMatchPercent(50);
+
+
+                    return boolQuery;
+                })
+                // .highlighter(f -> f.field("name").field("summary"))
                 .fetch(page * size, size);
 
         int totalHits = (int) result.total().hitCount();
@@ -92,16 +113,17 @@ public class FestivalSearchService {
         int end = Math.min(start + size, totalHits);
         List<Festival> paginatedFestivals = result.hits().subList(start, end);
 
-        // 페이지네이션된 페스티벌의 날씨 정보 가져오기
+        // Process the festivals to include weather information
         paginatedFestivals = festivalWeatherService.processFestivalsWeather(paginatedFestivals);
 
-        // 페스티벌 페이지 객체 생성
+        // Create and return the festival page object
         FestivalPage festivalPage = new FestivalPage();
         festivalPage.setContent(paginatedFestivals);
         festivalPage.setPageNumber(page);
         festivalPage.setPageSize(size);
         festivalPage.setTotalElements(totalHits);
-        festivalPage.setTotalPages((totalHits + size - 1) / size); // 올림 계산
+        festivalPage.setTotalPages((totalHits + size - 1) / size);
+
 
         return festivalPage;
     }
