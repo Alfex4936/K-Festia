@@ -53,6 +53,8 @@ public class Festival {
 
     private Double longitude;
 
+    private String imageUrl;   // Festival Image URL
+
     // Fields for English translations
 
     @FullTextField(analyzer = "english")

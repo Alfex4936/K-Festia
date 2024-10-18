@@ -9,6 +9,7 @@ type Festival {
     usageFeeInfo: String
     areaName: String
     naverUrl: String
+    imageUrl: String
     categories: [FestivalCategory!]! # List of categories
 
     latitude: Float

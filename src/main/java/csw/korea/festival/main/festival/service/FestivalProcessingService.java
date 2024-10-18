@@ -200,6 +200,7 @@ public class FestivalProcessingService {
         festival.setLatitude(dto.getLatitude());
         festival.setLongitude(dto.getLongitude());
         festival.setLastUpdated(LocalDateTime.now());
+        festival.setImageUrl(dto.getImageUrl());
 
         // Parse and set startDate and endDate
         // koreafestival.com returns date as "yyyy.MM.dd" but I will save as "yyyy-MM-dd"

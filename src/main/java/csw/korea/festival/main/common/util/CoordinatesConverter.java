@@ -16,10 +16,22 @@ public class CoordinatesConverter {
     private static final double RADIANS_PER_DEGREE = Math.PI / 180;
     private static final double SCALE_FACTOR = 2.5;
 
+    private static final int EARTH_RADIUS_KM = 6371;
+
+    /**
+     * Calculates the distance between two geographical points using the Haversine formula.
+     *
+     * @param userLat  Latitude of the user's location, in decimal degrees.
+     * @param userLon  Longitude of the user's location, in decimal degrees.
+     * @param festLat  Latitude of the destination point, in decimal degrees.
+     * @param festLon  Longitude of the destination point, in decimal degrees.
+     * @return The distance between the user's location and the destination point in kilometers.
+     *
+     *
+     * <br/>This method returns the distance in <b>kilometers (KM)</b>.<br/>To get the distance in meters, multiply the result by 1000.
+     */
     public static double calculateDistance(double userLat, double userLon, double festLat, double festLon) {
         // Haversine formula to calculate distance between two points in kilometers
-        final int EARTH_RADIUS_KM = 6371;
-
         double latDistance = Math.toRadians(festLat - userLat);
         double lonDistance = Math.toRadians(festLon - userLon);
 
@@ -33,8 +45,6 @@ public class CoordinatesConverter {
     }
 
     public static double[] calculateBoundingBox(double lat, double lon, double radiusKm) {
-        final int EARTH_RADIUS_KM = 6371;
-
         // Latitude bounds
         double deltaLat = Math.toDegrees(radiusKm / EARTH_RADIUS_KM);
         double minLat = lat - deltaLat;
@@ -252,7 +262,7 @@ public class CoordinatesConverter {
 
         @Override
         public String toString() {
-            return "WCONGNAMULCoord{" + "x=" + x + ", y=" + y + '}';
+            return "Coord{" + "x=" + x + ", y=" + y + '}';
         }
     }
 }

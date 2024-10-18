@@ -39,4 +39,7 @@ public class FestivalDTO {
 
     @JsonProperty("fstvlCntntsId")
     private String festivalId; // Festival ID
+
+    @JsonProperty("dispFstvlCntntsImgRout")
+    private String imageUrl;   // Festival Image URL
 }
