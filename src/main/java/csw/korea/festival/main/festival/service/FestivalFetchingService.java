@@ -28,7 +28,6 @@ public class FestivalFetchingService {
      *
      * @return List of festivals.
      */
-    // TODO: Parse the image url (field: dispFstvlCntntsImgRout)
     public List<FestivalDTO> fetchFestivalsInKorean() {
         List<FestivalDTO> allFestivals = new ArrayList<>();
         int startIdx = 0;

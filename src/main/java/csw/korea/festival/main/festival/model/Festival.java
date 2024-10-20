@@ -5,6 +5,10 @@ import csw.korea.festival.main.config.converter.LocalDateStringConverter;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.search.engine.backend.types.Sortable;
+import org.hibernate.search.mapper.pojo.bridge.builtin.annotation.GeoPointBinding;
+import org.hibernate.search.mapper.pojo.bridge.builtin.annotation.Latitude;
+import org.hibernate.search.mapper.pojo.bridge.builtin.annotation.Longitude;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 
 import java.time.LocalDate;
@@ -19,6 +23,7 @@ import java.util.stream.Stream;
 @Table(name = "festivals")
 @Access(AccessType.FIELD)
 @Indexed
+@GeoPointBinding(fieldName = "festivalLocation", sortable = Sortable.YES)
 public class Festival {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,8 +54,9 @@ public class Festival {
 
     private String areaName;   // Area Name
 
+    @Latitude
     private Double latitude;
-
+    @Longitude
     private Double longitude;
 
     private String imageUrl;   // Festival Image URL

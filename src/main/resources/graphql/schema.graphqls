@@ -12,4 +12,11 @@ type Query {
         page: Int,
         size: Int
     ): FestivalPage
+
+    searchFestivalsNearStation(
+        query: String,
+        stationName: String!,
+        page: Int,
+        size: Int
+    ): FestivalPage
 }

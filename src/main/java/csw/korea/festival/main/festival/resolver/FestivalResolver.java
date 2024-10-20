@@ -69,4 +69,22 @@ public class FestivalResolver {
 //        }
         return festivalSearchService.searchFestivals(query, pageNumber, pageSize);
     }
+
+    @RateLimited(key = "searchFestivalsNearStation", capacity = 50, refillTokens = 50, refillDurationMillis = 60000)
+    @QueryMapping
+    public FestivalPage searchFestivalsNearStation(
+            @Argument String query,
+            @Argument String stationName,
+            @Argument Integer page,
+            @Argument Integer size
+    ) {
+        int pageNumber = page != null ? page : 0;
+        int pageSize = size != null ? size : 10;
+
+        // When the stationName is empty, return all festivals
+        if (stationName == null || stationName.isBlank()) {
+            return festivalService.getFestivals(null, null, null, pageNumber, pageSize);
+        }
+        return festivalSearchService.searchFestivalsNearStation(query, stationName, pageNumber, pageSize);
+    }
 }
