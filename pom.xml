@@ -265,6 +265,7 @@
 						-XX:+UseZGC
 						-XX:+ZGenerational
 						-XX:TieredStopAtLevel=1
+						-Xshare:on
 					</jvmArguments>
 
 					<excludes>
