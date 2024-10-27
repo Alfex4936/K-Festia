@@ -19,4 +19,13 @@ type Query {
         page: Int,
         size: Int
     ): FestivalPage
+
+    planFestivalRoute(
+        startStation: String!
+        startDate: String!
+        endDate: String!
+        preferredCategories: [FestivalCategory!]
+        maxFestivals: Int,
+        locale: String
+    ): FestivalRoute
 }

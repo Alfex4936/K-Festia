@@ -68,7 +68,7 @@ public class FestivalService {
         }
 
         // Define the freshness threshold (e.g., data updated within the last 14 days)
-        LocalDateTime freshnessThreshold = LocalDateTime.now().minusDays(14);
+        LocalDateTime freshnessThreshold = LocalDateTime.now().minusWeeks(3);
 
         // Compute start and end dates of the month
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");

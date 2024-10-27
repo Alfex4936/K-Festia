@@ -1,11 +1,13 @@
 package csw.korea.festival.main.festival.repository;
 
 import csw.korea.festival.main.festival.model.Festival;
+import csw.korea.festival.main.festival.model.FestivalCategory;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -53,5 +55,10 @@ public interface FestivalRepository extends JpaRepository<Festival, Long> {
                                        @Param("maxLat") double maxLat,
                                        @Param("minLon") double minLon,
                                        @Param("maxLon") double maxLon);
+
+    @Query("SELECT DISTINCT f FROM Festival f JOIN f.categories c WHERE f.startDate >= :startDate AND f.endDate <= :endDate AND c IN :categories")
+    List<Festival> findFestivalsByDateRangeAndCategories(@Param("startDate") LocalDate startDate,
+                                                         @Param("endDate") LocalDate endDate,
+                                                         @Param("categories") List<FestivalCategory> categories);
 
 }

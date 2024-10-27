@@ -98,6 +98,30 @@ users can effortlessly discover and explore festivals tailored to their interest
      }
    }
    ```
+   
+4. **Simple Router planner by walking nearby stations**
+
+   ```graphql
+   query {
+     planFestivalRoute(
+     startStation: "서울역",
+      startDate: "2024-10-01",
+      endDate: "2024-11-30",
+      preferredCategories: [MUSIC_PERFORMING_ARTS, FOOD_CULINARY],
+      maxFestivals: 3) {
+          festivals {
+          name
+          startDate
+          endDate
+          address
+          categories
+          # default locale "en"
+          }
+        totalDistance
+        totalDuration
+      }
+   }
+   ```
 
 > **Note**: Customize queries as per frontend requirements. Utilize GraphQL clients like [Apollo](https://www.apollographql.com/) for efficient data fetching.
 

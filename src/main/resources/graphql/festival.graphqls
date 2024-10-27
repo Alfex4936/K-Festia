@@ -48,3 +48,9 @@ enum FestivalCategory {
     COMMUNITY_SOCIAL
     OTHER
 }
+
+type FestivalRoute {
+    festivals: [Festival!]!
+    totalDistance: Float
+    totalDuration: String
+}
