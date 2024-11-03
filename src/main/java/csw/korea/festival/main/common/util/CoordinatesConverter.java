@@ -18,6 +18,9 @@ public class CoordinatesConverter {
 
     private static final int EARTH_RADIUS_KM = 6371;
 
+    public static final double MAX_DISTANCE_KM = 30.0; // Maximum distance in kilometers
+
+
     /**
      * Calculates the distance between two geographical points using the Haversine formula.
      *

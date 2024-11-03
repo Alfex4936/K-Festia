@@ -53,4 +53,12 @@ type FestivalRoute {
     festivals: [Festival!]!
     totalDistance: Float
     totalDuration: String
+    routeSegments: [KakaoRouteSegment]
+}
+
+type KakaoRouteSegment {
+    fromFestival: Festival
+    toFestival: Festival
+    distance: Float
+    duration: String
 }

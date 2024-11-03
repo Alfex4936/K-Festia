@@ -105,15 +105,6 @@ public class FestivalSearchService {
         return festivalPage;
     }
 
-    /**
-     * 다중 단어 쿼리를 처리하여 관련 페스티벌을 검색합니다. (지정된 역 Station 주변)
-     *
-     * @param query 검색 쿼리 문자열 (예: "음식")
-     * @param station 역 이름 (예: "서울대입구역")
-     * @param page  현재 페이지 번호
-     * @param size  페이지당 결과 개수
-     * @return 페스티벌 페이지 결과
-     */
     public FestivalPage searchFestivals(String query, int page, int size, Double latitude, Double longitude) {
         SearchSession searchSession = Search.session(entityManager);
 
@@ -192,6 +183,15 @@ public class FestivalSearchService {
         return festivalPage;
     }
 
+    /**
+     * 다중 단어 쿼리를 처리하여 관련 페스티벌을 검색합니다. (지정된 역 Station 주변)
+     *
+     * @param query 검색 쿼리 문자열 (예: "음식")
+     * @param stationName 역 이름 (예: "서울대입구역")
+     * @param page  현재 페이지 번호
+     * @param size  페이지당 결과 개수
+     * @return 페스티벌 페이지 결과
+     */
     public FestivalPage searchFestivalsNearStation(String query, String stationName, int page, int size) {
         // Get the station coordinates
         Optional<KoreaStationService.Station> stationOpt = koreaStationService.getStationByName(stationName);

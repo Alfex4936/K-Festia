@@ -1,6 +1,7 @@
 package csw.korea.festival.main.festival.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import csw.korea.festival.main.common.dto.KakaoRouteSegment;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,6 +20,9 @@ public class FestivalRoute {
 
     @JsonProperty("totalDuration")
     private String totalDuration;
+
+    @JsonProperty("routeSegments")
+    private List<KakaoRouteSegment> routeSegments;
 
     public FestivalRoute() {
 

@@ -1,6 +1,7 @@
 package csw.korea.festival.main.config;
 
 import csw.korea.festival.main.config.web.RateLimitExceededException;
+import csw.korea.festival.main.festival.exception.NoNearbyFestivalException;
 import graphql.ErrorClassification;
 import graphql.ErrorType;
 import graphql.GraphQLError;
@@ -33,6 +34,13 @@ public class GraphQLConfig {
                             env.getField().getSourceLocation(),
                             env.getExecutionStepInfo().getPath().toList(),
                             Map.of("code", "RATE_LIMIT_EXCEEDED")
+                    );
+                } else if (ex instanceof NoNearbyFestivalException) {
+                    return new CustomGraphQLRateLimitError(
+                            ex.getMessage(),
+                            env.getField().getSourceLocation(),
+                            env.getExecutionStepInfo().getPath().toList(),
+                            Map.of("code", "NO_NEARBY_FESTIVAL")
                     );
                 }
                 return super.resolveToSingleError(ex, env);
