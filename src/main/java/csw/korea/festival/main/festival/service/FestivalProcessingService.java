@@ -128,18 +128,16 @@ public class FestivalProcessingService {
             String festivalId = entry.getKey();
             Festival festival = entry.getValue();
 
-            if (!existingFestivalMap.containsKey(festivalId)) {
-                // New festival
+            existingFestivalMap.computeIfAbsent(festivalId, id -> {
                 festivalsToProcess.add(festival);
-            } else {
-                // Festival exists in database
-                Festival existingFestival = existingFestivalMap.get(festivalId);
-                if (existingFestival.getLastUpdated().isBefore(freshnessThreshold)) {
-                    // Existing festival is outdated
-                    festival.setId(existingFestival.getId()); // Ensure we're updating the same entity
-                    festivalsToProcess.add(festival);
-                }
-                // Else, up-to-date festival, do not process
+                return festival;
+            });
+
+            Festival existingFestival = existingFestivalMap.get(festivalId);
+            if (existingFestival != null && existingFestival.getLastUpdated().isBefore(freshnessThreshold)) {
+                // Existing festival is outdated
+                festival.setId(existingFestival.getId()); // Ensure we're updating the same entity
+                festivalsToProcess.add(festival);
             }
         }
 

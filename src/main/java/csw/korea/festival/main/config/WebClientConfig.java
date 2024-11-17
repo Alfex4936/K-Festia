@@ -7,6 +7,9 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import io.github.resilience4j.reactor.ratelimiter.operator.RateLimiterOperator;
 import io.netty.channel.ChannelOption;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -41,26 +44,25 @@ public class WebClientConfig {
                 .build();
 
         // SSL Context Configuration
-//        SslContext sslContext;
-//        try {
-//            sslContext = SslContextBuilder.forClient()
-//                    .trustManager(InsecureTrustManagerFactory.INSTANCE) // TODO: on production
-//                    .build();
-//        } catch (Exception e) {
-//            logger.error("Error building SSL context: {}", e.getMessage());
-//            sslContext = null;
-//        }
+        SslContext sslContext;
+        try {
+            sslContext = SslContextBuilder.forClient()
+                    .trustManager(InsecureTrustManagerFactory.INSTANCE) // TODO: on production
+                    .build();
+        } catch (Exception e) {
+            sslContext = null;
+        }
 
         // HttpClient Configuration
-//        SslContext finalSslContext = sslContext;
+        SslContext finalSslContext = sslContext;
         HttpClient httpClient = HttpClient.create(connectionProvider)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 15000) // 15 seconds
                 .responseTimeout(Duration.ofSeconds(30)) // 30 seconds
-//                .secure(spec -> {
-//                    if (finalSslContext != null) {
-//                        spec.sslContext(finalSslContext);
-//                    }
-//                })
+                .secure(spec -> {
+                    if (finalSslContext != null) {
+                        spec.sslContext(finalSslContext);
+                    }
+                })
                 .keepAlive(true)
                 .compress(true)
                 .doOnConnected(conn ->

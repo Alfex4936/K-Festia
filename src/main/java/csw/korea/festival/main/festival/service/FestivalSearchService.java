@@ -42,9 +42,9 @@ public class FestivalSearchService {
         String[] terms = query.split("\\s+");
 
         // 2. Convert each term using qwerty to Korean conversion
-        String[] qwertyTerms = Arrays.stream(terms)
-                .map(Korean::toHangul)
-                .toArray(String[]::new);
+//        String[] qwertyTerms = Arrays.stream(terms)
+//                .map(Korean::toHangul)
+//                .toArray(String[]::new);
 
         // 3. Build the boolean query dynamically
         SearchResult<Festival> result = searchSession.search(Festival.class)
@@ -78,7 +78,7 @@ public class FestivalSearchService {
                     }
 
                     //  Require a percentage of terms to match.
-                    boolQuery.minimumShouldMatchPercent(50);
+                    boolQuery.minimumShouldMatchPercent(35);
 
                     return boolQuery;
                 })

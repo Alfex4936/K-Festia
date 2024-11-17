@@ -61,4 +61,6 @@ public interface FestivalRepository extends JpaRepository<Festival, Long> {
                                                          @Param("endDate") LocalDate endDate,
                                                          @Param("categories") List<FestivalCategory> categories);
 
+    @Query("SELECT f FROM Festival f WHERE f.lastUpdated > :lastUpdatedAfter")
+    List<Festival> findFestivalsUpdatedAfter(@Param("lastUpdatedAfter") LocalDateTime lastUpdatedAfter);
 }

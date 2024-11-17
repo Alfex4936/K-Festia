@@ -159,4 +159,41 @@ public class FestivalService {
         return festivalRepository.findByProvinceAndCity(province, city);
     }
 
+    /**
+     * Updates the festivals data during application startup.
+     */
+    public void updateFestivalsDataOnStartup() {
+        // Define the freshness threshold (e.g., data updated within the last 3 weeks)
+        LocalDateTime freshnessThreshold = LocalDateTime.now().minusWeeks(3);
+
+        // Fetch festivals updated after the freshness threshold
+        List<Festival> festivals = festivalRepository.findFestivalsUpdatedAfter(freshnessThreshold);
+
+        if (festivals.isEmpty()) {
+            log.info("No fresh festivals found in the database. Fetching from external API...");
+
+            // Fetch from external API
+            List<FestivalDTO> festivalDTOs = festivalFetchingService.filterExpiredFestivals(
+                    festivalFetchingService.fetchFestivalsInKorean()
+            );
+
+            // Process festivals (translation and categorization)
+            List<Festival> processedFestivals = festivalProcessingService.processFestivals(
+                    festivalDTOs, freshnessThreshold
+            );
+
+            if (!processedFestivals.isEmpty()) {
+                // Update the lastUpdated timestamp
+                processedFestivals.forEach(festival -> festival.setLastUpdated(LocalDateTime.now()));
+
+                // Save processed festivals to the database
+                festivalRepository.saveAll(processedFestivals);
+                log.info("Saved {} new festivals to the database.", processedFestivals.size());
+            } else {
+                log.info("No new festivals to save after processing.");
+            }
+        } else {
+            log.info("Fresh festivals are already available in the database.");
+        }
+    }
 }
