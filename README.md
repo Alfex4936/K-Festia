@@ -1,5 +1,6 @@
 # K-Festia
 
+![image](https://github.com/user-attachments/assets/165854a2-42dc-4839-a415-0a87dc577ce8)
 ![example_graphql](https://github.com/user-attachments/assets/c48f0087-74fb-443e-82c6-d2d4edf144b0)
 ![search](https://github.com/user-attachments/assets/f2554a6c-841b-4a0e-be02-12229e02f665)
 

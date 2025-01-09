@@ -102,7 +102,7 @@ public class FestivalProcessingService {
         return festival;
     }
 
-
+// TODO: Skip festivals that are canceled or postponed (no start_date or end_date)
     @SuppressWarnings(value = "UnstableApiUsage")
     public List<Festival> processFestivals(List<FestivalDTO> festivalDTOs, LocalDateTime freshnessThreshold) {
         if (festivalDTOs.isEmpty()) {
@@ -148,7 +148,7 @@ public class FestivalProcessingService {
         }
 
         // Proceed to translate and categorize festivals
-        int maxConcurrency = 10;
+        int maxConcurrency = 5;
         ThreadFactory baseFactory = Thread.ofVirtual().factory();
         ThreadFactory limitedFactory = new LimitedThreadFactory(baseFactory, maxConcurrency);
 
