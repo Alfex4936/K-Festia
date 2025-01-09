@@ -191,8 +191,8 @@ public class FestivalProcessingService {
         Festival festival = new Festival();
         festival.setFestivalId(dto.getFestivalId().strip());
         festival.setName(dto.getName().strip());
-        festival.setSummary(dto.getSummary());
-        festival.setAddress(dto.getAddress());
+        festival.setSummary(dto.getSummary().replace("<br>", " ").strip());
+        festival.setAddress(dto.getAddress().strip());
         festival.setUsageFeeInfo(dto.getUsageFeeInfo());
         festival.setAreaName(dto.getAreaName());
         festival.setLatitude(dto.getLatitude());

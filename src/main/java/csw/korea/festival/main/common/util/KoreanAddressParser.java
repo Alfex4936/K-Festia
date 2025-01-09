@@ -2,37 +2,70 @@ package csw.korea.festival.main.common.util;
 
 import csw.korea.festival.main.common.dto.AddressComponents;
 
+import java.util.Set;
+
 public class KoreanAddressParser {
 
+    // Helper sets for identifying which token belongs where.
+    private static final Set<String> PROVINCE_SUFFIXES = Set.of("도", "특별자치시", "광역시", "특별시");
+    private static final Set<String> CITY_SUFFIXES = Set.of("시", "군"); // ex: 안성시, 영양군
+    private static final Set<String> DISTRICT_SUFFIXES = Set.of("구", "군"); // ex: 동래구, 강화군
+    private static final Set<String> TOWN_SUFFIXES = Set.of("읍", "면", "동");  // ex: 죽산면, 보람동
+
     public AddressComponents parseAddress(String address) {
+        // Return an empty object if input is invalid
+        if (address == null || address.trim().isEmpty()) {
+            return new AddressComponents();
+        }
+
         AddressComponents components = new AddressComponents();
 
-        // Split the address by spaces
-        String[] parts = address.split("\\s+");
+        // Split and trim
+        String[] parts = address.trim().split("\\s+");
 
-        // Province City District [Town] [Street and Number] [(Additional Info)]
-        int index = 0;
+        boolean provinceSet = false;
+        boolean citySet = false;
+        boolean districtSet = false;
+        boolean townSet = false;
 
-        if (index < parts.length) {
-            components.setProvince(parts[index++]);
-        }
-        if (index < parts.length) {
-            components.setCity(parts[index++]);
-        }
-        if (index < parts.length && parts[index].endsWith("구") || parts[index].endsWith("군")) {
-            components.setDistrict(parts[index++]);
-        }
-        if (index < parts.length && parts[index].endsWith("읍") || parts[index].endsWith("면") || parts[index].endsWith("동")) {
-            components.setTown(parts[index++]);
-        }
-        if (index < parts.length) {
-            StringBuilder streetBuilder = new StringBuilder();
-            while (index < parts.length) {
-                streetBuilder.append(parts[index++]).append(" ");
+        StringBuilder streetBuilder = new StringBuilder();
+
+        // Single pass over tokens
+        for (String part : parts) {
+            if (!provinceSet && endsWithAny(part, PROVINCE_SUFFIXES)) {
+                components.setProvince(part);
+                provinceSet = true;
+            } else if (!citySet && endsWithAny(part, CITY_SUFFIXES)) {
+                components.setCity(part);
+                citySet = true;
+            } else if (!districtSet && endsWithAny(part, DISTRICT_SUFFIXES)) {
+                components.setDistrict(part);
+                districtSet = true;
+            } else if (!townSet && endsWithAny(part, TOWN_SUFFIXES)) {
+                components.setTown(part);
+                townSet = true;
+            } else {
+                // Anything else goes into street
+                streetBuilder.append(part).append(" ");
             }
-            components.setStreet(streetBuilder.toString().trim());
         }
+
+        // Trim trailing space
+        String street = streetBuilder.toString().trim();
+        components.setStreet(street);
 
         return components;
+    }
+
+    /**
+     * Utility method to check if a string ends with any of the given suffixes.
+     */
+    private boolean endsWithAny(String input, Set<String> suffixes) {
+        for (String suffix : suffixes) {
+            if (input.endsWith(suffix)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

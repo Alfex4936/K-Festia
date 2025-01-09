@@ -10,6 +10,7 @@ import csw.korea.festival.main.festival.model.FestivalCategory;
 import csw.korea.festival.main.festival.model.FestivalRouteDTO;
 import csw.korea.festival.main.festival.repository.FestivalRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 import static csw.korea.festival.main.common.util.CoordinatesConverter.calculateDistance;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class FestivalRouteService {
@@ -101,14 +103,15 @@ public class FestivalRouteService {
         List<Festival> allFestivals = festivalRepository.findFestivalsByDateRangeAndCategories(
                 startDate, endDate, preferredCategories);
 
+        log.info("Fetched {} festivals within the date range and categories.", allFestivals.size());
+
         // Filter festivals within the maximum distance
         List<Festival> nearbyFestivals = allFestivals.stream()
-                .map(festival -> {
+                .peek(festival -> {
                     double festivalLat = festival.getLatitude();
                     double festivalLon = festival.getLongitude();
                     double distance = calculateDistance(startLat, startLon, festivalLat, festivalLon);
-                    festival.setDistance(distance); // Add a field to store distance
-                    return festival;
+                    festival.setDistance(distance);
                 })
                 .filter(festival -> festival.getDistance() <= maxDistanceKm)
                 .sorted(Comparator.comparingDouble(Festival::getDistance))
