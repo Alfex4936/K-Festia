@@ -161,39 +161,44 @@ public class FestivalService {
 
     /**
      * Updates the festivals data during application startup.
+     * @return true if new festivals were added, false otherwise
      */
-    public void updateFestivalsDataOnStartup() {
-        // Define the freshness threshold (e.g., data updated within the last 3 weeks)
+    public boolean updateFestivalsDataOnStartup() {
+        boolean dataUpdated = false;
+        // 기존 임계값 정의
         LocalDateTime freshnessThreshold = LocalDateTime.now().minusWeeks(3);
 
-        // Fetch festivals updated after the freshness threshold
+        // 임계값 이후 업데이트된 축제 확인
         List<Festival> festivals = festivalRepository.findFestivalsUpdatedAfter(freshnessThreshold);
 
         if (festivals.isEmpty()) {
-            log.info("No fresh festivals found in the database. Fetching from external API...");
+            log.info("데이터베이스에 최신 축제 정보가 없습니다. 외부 API에서 가져오는 중...");
 
-            // Fetch from external API
+            // 외부 API에서 가져오기
             List<FestivalDTO> festivalDTOs = festivalFetchingService.filterExpiredFestivals(
                     festivalFetchingService.fetchFestivalsInKorean()
             );
 
-            // Process festivals (translation and categorization)
+            // 축제 정보 처리 (번역 및 분류)
             List<Festival> processedFestivals = festivalProcessingService.processFestivals(
                     festivalDTOs, freshnessThreshold
             );
 
             if (!processedFestivals.isEmpty()) {
-                // Update the lastUpdated timestamp
+                // 최종 업데이트 타임스탬프 갱신
                 processedFestivals.forEach(festival -> festival.setLastUpdated(LocalDateTime.now()));
 
-                // Save processed festivals to the database
+                // 처리된 축제 정보를 데이터베이스에 저장
                 festivalRepository.saveAll(processedFestivals);
-                log.info("Saved {} new festivals to the database.", processedFestivals.size());
+                log.info("{} 개의 새로운 축제 정보가 데이터베이스에 저장되었습니다.", processedFestivals.size());
+                dataUpdated = true;
             } else {
-                log.info("No new festivals to save after processing.");
+                log.info("처리 후 저장할 새 축제 정보가 없습니다.");
             }
         } else {
-            log.info("Fresh festivals are already available in the database.");
+            log.info("데이터베이스에 최신 축제 정보가 이미 있습니다.");
         }
+
+        return dataUpdated;
     }
 }

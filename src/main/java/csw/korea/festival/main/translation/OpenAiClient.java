@@ -67,7 +67,7 @@ public class OpenAiClient {
         try {
             // Construct the request body using Jackson
             ObjectNode requestBody = objectMapper.createObjectNode();
-            requestBody.put("model", "gpt-4o-mini");
+            requestBody.put("model", "gpt-4.1-mini");
 
             ArrayNode messages = objectMapper.createArrayNode();
 

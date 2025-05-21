@@ -11,7 +11,7 @@ public class LocalDateStringConverter implements AttributeConverter<LocalDate, S
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    @Override
+    @Override 
     public String convertToDatabaseColumn(LocalDate localDate) {
         return (localDate == null ? null : localDate.format(formatter));
     }

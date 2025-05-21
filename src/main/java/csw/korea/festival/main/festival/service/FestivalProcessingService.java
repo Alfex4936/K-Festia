@@ -148,7 +148,7 @@ public class FestivalProcessingService {
         }
 
         // Proceed to translate and categorize festivals
-        int maxConcurrency = 5;
+        int maxConcurrency = 3;
         ThreadFactory baseFactory = Thread.ofVirtual().factory();
         ThreadFactory limitedFactory = new LimitedThreadFactory(baseFactory, maxConcurrency);
 

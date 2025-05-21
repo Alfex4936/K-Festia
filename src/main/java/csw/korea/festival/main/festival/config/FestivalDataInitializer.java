@@ -26,18 +26,28 @@ public class FestivalDataInitializer implements ApplicationListener<ApplicationR
     }
 
     @Override
+    @Transactional
     public void onApplicationEvent(@NotNull ApplicationReadyEvent event) {
-        // Update the festivals data
-        festivalService.updateFestivalsDataOnStartup();
+        // 트랜잭션이 완료되도록 명시적으로 분리
+        boolean dataUpdated = festivalService.updateFestivalsDataOnStartup();
 
-        // Build Lucene index
+        // 데이터가 업데이트되었다면 약간의 지연을 주어 트랜잭션이 완전히 커밋되도록 함
+        if (dataUpdated) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        // Lucene 인덱스 빌드
         MassIndexer massIndexer = Search.session(entityManager).massIndexer(Festival.class);
         try {
             massIndexer.startAndWait();
-            log.info("Lucene index built successfully.");
+            log.info("Lucene 인덱스가 성공적으로 생성되었습니다.");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.error("Lucene index building was interrupted.", e);
+            log.error("Lucene 인덱스 생성이 중단되었습니다.", e);
         }
     }
 }
